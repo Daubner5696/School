@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chyť phishing</title>
+<style>
+  :root{--navy:#14284b;--cyan:#0e8fa8;--pink:#d6336c;--bg:#f4f7fb;--card:#fff;--line:#dbe3ee;--txt:#1b2536;--mut:#5b6b82;--good:#2f9e44;--sel:#fff3bf}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.45}
+  .wrap{max-width:780px;margin:0 auto;padding:16px}
+  h1{font-size:1.35rem;margin:0 0 4px;color:var(--navy)}
+  .sub{color:var(--mut);margin:0 0 12px;font-size:.95rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .pill{font-size:.85rem;background:#e8f4f7;color:var(--navy);border-radius:999px;padding:4px 12px}
+  .btn{border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:600;cursor:pointer;color:#fff;background:var(--cyan)}
+  .btn.phish{background:var(--pink)} .btn.ok{background:var(--good)} .btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .msg{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .msg .bar{background:#eef2f8;padding:8px 12px;font-size:.8rem;color:var(--mut);display:flex;justify-content:space-between}
+  .msg .hd{padding:10px 14px;border-bottom:1px solid var(--line);font-size:.92rem}
+  .msg .hd div{margin:2px 0}.msg .hd b{color:var(--mut);font-weight:600;display:inline-block;min-width:68px}
+  .msg .bd{padding:14px;font-size:1rem;white-space:pre-line}
+  .sms{max-width:420px;margin:0 auto;border-radius:18px;background:#e9eef5}
+  .sms .bd{background:#fff;margin:10px;border-radius:14px}
+  .hs{cursor:pointer;border-radius:4px;padding:0 2px;border-bottom:2px dotted #aab6c8;transition:background .15s}
+  .hs:hover{background:#f1f5fa}
+  .hs.sel{background:var(--sel);border-bottom-color:#e0b400}
+  .hs.hit{background:#d3f9d8;border-bottom:2px solid var(--good)}
+  .hs.miss{background:#ffe3ec;border-bottom:2px dashed var(--pink)}
+  .hs.fp{background:#e9ecef;border-bottom:2px solid #adb5bd}
+  .hs.locked{cursor:default}
+  .help{font-size:.9rem;color:var(--mut);margin:10px 0}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .fb{margin-top:12px;border-radius:12px;padding:12px 14px;font-size:.95rem}
+  .fb.good{background:#ebfbee;border:1px solid #b2f2bb}.fb.bad{background:#fff0f5;border:1px solid #ffc9dc}
+  .fb ul{margin:6px 0 0;padding-left:20px}
+  .fb li{margin:3px 0}
+  .legend{font-size:.8rem;color:var(--mut);margin-top:8px}
+  .legend span{padding:0 6px;border-radius:4px;margin-right:6px}
+  .mode{display:flex;gap:6px;align-items:center;font-size:.9rem}
+  .mode button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font:inherit;font-size:.85rem;cursor:pointer;color:var(--navy)}
+  .mode button[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .big{font-size:2.4rem;font-weight:800;color:var(--navy);margin:0}
+  .rule{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+  .rule div{background:#eef7f9;border-radius:10px;padding:10px;text-align:center;font-size:.9rem}
+  .rule b{display:block;color:var(--cyan)}
+  @media(max-width:520px){.rule{grid-template-columns:1fr}}
+  .hidden{display:none}
+  footer{color:var(--mut);font-size:.8rem;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎣 Chyť phishing</h1>
+  <p class="sub">Prečítaj si správu. <b>Klikni na všetko podozrivé</b> (označí sa žlto) a potom rozhodni, či ide o phishing. Pozor – niektoré správy sú v poriadku!</p>
+
+  <div id="start" class="card">
+    <b>Vyber si úroveň:</b>
+    <div class="mode" style="margin:10px 0">
+      <button data-m="easy" aria-pressed="true">🟢 Ľahká (s nápovedou)</button>
+      <button data-m="hard" aria-pressed="false">🔴 Expert (bez nápovedy)</button>
+    </div>
+    <p class="help">Ľahká: pri každej správe uvidíš, koľko varovných signálov sa v nej skrýva. Expert: musíš ich nájsť sám/sama. Všetky firmy, čísla a adresy v ukážkach sú vymyslené.</p>
+    <button class="btn" id="go">Začať ▶</button>
+  </div>
+
+  <div id="game" class="hidden">
+    <div class="top"><span class="pill" id="prog"></span><span class="pill" id="score"></span></div>
+    <div class="card">
+      <div id="msgbox"></div>
+      <div class="help" id="hint"></div>
+      <div class="actions" id="actions">
+        <button class="btn phish" id="bp">🎣 Je to phishing</button>
+        <button class="btn ok" id="bo">✅ Je to dôveryhodné</button>
+      </div>
+      <div id="fb"></div>
+      <div class="legend hidden" id="legend"><span style="background:#d3f9d8">našiel/-a si</span><span style="background:#ffe3ec">prehliadol/-a si</span><span style="background:#e9ecef">v poriadku (zbytočne označené)</span></div>
+      <div class="actions"><button class="btn" id="next" hidden>Ďalšia správa ▶</button></div>
+    </div>
+  </div>
+
+  <div id="end" class="card hidden">
+    <p class="big" id="pct"></p>
+    <p id="endtxt"></p>
+    <div class="rule"><div><b>1 · STOP</b>Neklikaj hneď. Tlak a naliehavosť sú varovanie.</div><div><b>2 · PREMYSLI</b>Pozri odosielateľa, doménu odkazu a čo sa po tebe chce.</div><div><b>3 · OVER</b>Zavolaj alebo otvor stránku sám/sama – nie cez odkaz v správe.</div></div>
+    <p class="help"><b>Ak si už klikol/-la alebo zadal/-a heslo:</b> okamžite zmeň heslo, zapni 2FA, povedz to dospelému a podozrivú správu nahlás. Nezakrývaj to – stáva sa to aj profesionálom.</p>
+    <button class="btn" id="again">↺ Hrať znova</button>
+  </div>
+  <footer>Vzdelávacia pomôcka · SOŠ pedagogická Prešov · nič sa neukladá ani neodosiela</footer>
+</div>
+
+<script>
+// Segmenty: reťazec = bežný text; [text, "dôvod"] = varovný signál (klikateľné miesto)
+var MSG=[
+ {type:"phish",kind:"email",
+  from:["Moja Banka <",["info@moja-banka-overenie.info","Doména nepatrí banke – je to cudzia adresa s koncovkou .info. Oficiálna doména by bola napr. mojabanka.sk."],">"],
+  subj:[["URGENTNÉ: Váš účet bude zablokovaný!","Nátlak a naliehavosť – útočník ťa chce prinútiť konať bez rozmýšľania."]],
+  body:[["Vazeny zakaznik,","Neosobné oslovenie bez mena a bez diakritiky – pravá banka ťa oslovuje menom."],"\n\nVáš účet bude ",["do 24 hodín zablokovaný","Časový limit – klasický psychologický tlak."]," z bezpečnostných dôvodov.\n\nKliknite ",["SEM","Odkaz bez zrejmého cieľa. Pred kliknutím vždy najprv skontroluj, kam vedie."]," a ",["zadajte heslo a PIN","Banka nikdy nežiada heslo ani PIN cez e-mail alebo SMS."]," pre overenie.\n\nĎakujeme,\n",["oddelenie bezpečnosť","Podpis bez mena a priezviska – nedá sa overiť. (Samotný podpis však ešte nič nedokazuje.)",true]]},
+ {type:"phish",kind:"sms",
+  from:["+421 9xx xxx xxx (neznáme číslo)"],
+  subj:[],
+  body:["Váš balík nemožno doručiť. Doplaťte ",["colný poplatok 1,20 €","Malá suma uspáva ostražitosť – cieľom je získať údaje o karte."]," do dnešnej polnoci: ",["posta-sk-dorucenie.top/k8Qz","Podvodná doména (.top, pomlčky). Slovenská pošta používa iba svoju oficiálnu stránku."]," ",["Inak bude vrátený odosielateľovi.","Hrozba a časový tlak."]]},
+ {type:"legit",kind:"email",
+  from:["Mgr. Nováková <",["n.novakova@sosukazka.sk","Odosielateľ je zo školskej domény, ktorú poznáš – v poriadku.",true],">"],
+  subj:["Zmena rozvrhu – streda 14. 10."],
+  body:["Ahojte,\n\nvo stredu odpadá 3. hodina informatiky, namiesto nej bude výučba v učebni č. 12. ",["Rozvrh nájdete aj v systéme školy po bežnom prihlásení cez školskú stránku.","Nenúti ťa klikať na odkaz ani zadávať heslo do správy – odkazuje na stránku, ktorú už poznáš. V poriadku.",true],"\n\nNech sa darí,\nMgr. Nováková\nSOŠ ukážková"]},
+ {type:"phish",kind:"dm",
+  from:["giveaway_official_2026 ",["(účet vytvorený pred 3 dňami, 0 príspevkov)","Čerstvý, prázdny účet – typický znak falošného profilu."]],
+  subj:[],
+  body:[["🎉 Gratulujeme, vyhral si iPhone 16!","Výhra v súťaži, do ktorej si sa nezapojil/-a – klasická návnada."]," Aby sme ti ho mohli poslať, ",["prihlás sa cez tento odkaz: bit.ly/iph0ne-win","Skrátený odkaz skrýva skutočnú adresu a vedie na falošné prihlásenie."]," a ",["zadaj svoje heslo k Instagramu","Žiadna súťaž nepotrebuje tvoje heslo."],". Máš len 10 minút! ⏰"]},
+ {type:"phish",kind:"email",
+  from:["Mgr. Horváthová – riaditeľka <",["horvathova.riaditelka@gmail.com","Riaditeľka by písala zo školskej adresy, nie zo súkromného Gmailu."],">"],
+  subj:["Potrebujem pomoc"],
+  body:["Dobrý deň,\n\nsom na rokovaní a nemôžem telefonovať. ",["Potrebujem hneď kúpiť 3 darčekové karty po 100 €","Žiadosť o darčekové karty alebo platbu je častý podvod (tzv. CEO fraud)."]," pre hosťa. Kódy z kariet mi pošlite odpoveďou. ",["Zatiaľ to nikomu nehovorte,","Požiadavka na utajenie – podvodník chce zabrániť overeniu."]," vysvetlím neskôr.\n\nĎakujem,\nH."]},
+ {type:"legit",kind:"email",
+  from:["Obchod Ukážka <","objednavky@obchod-ukazka.sk",">"],
+  subj:["Objednávka č. 48213 bola odoslaná"],
+  body:[["Dobrý deň, Dávid,","Oslovenie menom a objednávka, ktorú si naozaj urobil/-a – v poriadku.",true],"\n\ntvoja objednávka (slúchadlá, 1 ks) bola dnes odoslaná kuriérom. Doručenie očakávame do 2 pracovných dní. Sledovať ju môžeš v sekcii „Moje objednávky“, ",["keď sa prihlásiš priamo na našej stránke.","Pokyn prihlásiť sa cez vlastnú záložku, nie cez odkaz – správne správanie. V poriadku.",true],"\n\n",["Platbu sme prijali, nič ďalšie netreba robiť.","Žiadna akcia, žiadny tlak. V poriadku.",true],"\nĎakujeme za nákup!"]},
+ {type:"phish",kind:"sms",
+  from:["Podpora účtu"],
+  subj:[],
+  body:["Zaznamenali sme ",["podozrivú platbu 249 €","Strach z neznámej platby ťa má vystrašiť."],". Na jej zrušenie ",["nám odpíšte kódom, ktorý ste práve dostali SMS-kou: ","Overovací kód (2FA) nikdy nikomu nediktuj ani neposielaj – je len pre teba."],"v opačnom prípade bude platba stiahnutá. ","Ďakujeme."]}
+];
+
+var $=function(i){return document.getElementById(i)};
+var mode="easy", idx=0, pts=0, maxpts=0, answered=false;
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function seg(a,key){ // vráti HTML pre pole segmentov
+  return a.map(function(s,i){
+    if(typeof s==="string") return esc(s);
+    return '<span class="hs" tabindex="0" role="button" aria-pressed="false" data-ok="'+(s[2]?1:0)+'" data-r="'+esc(s[1]).replace(/"/g,"&quot;")+'">'+esc(s[0])+'</span>';
+  }).join("");
+}
+function render(){
+  var m=MSG[idx]; answered=false;
+  var flags=[].concat(m.from,m.subj,m.body).filter(function(s){return typeof s!=="string"&&!s[2]}).length;
+  var html;
+  if(m.kind==="sms"||m.kind==="dm"){
+    html='<div class="msg sms"><div class="bar"><span>'+(m.kind==="sms"?"SMS":"Správa na sociálnej sieti")+'</span><span>teraz</span></div><div class="hd"><div><b>Od:</b>'+seg(m.from)+'</div></div><div class="bd">'+seg(m.body)+'</div></div>';
+  } else {
+    html='<div class="msg"><div class="bar"><span>E-mail</span><span>Doručená pošta</span></div><div class="hd"><div><b>Od:</b>'+seg(m.from)+'</div><div><b>Predmet:</b>'+seg(m.subj)+'</div></div><div class="bd">'+seg(m.body)+'</div></div>';
+  }
+  $("msgbox").innerHTML=html;
+  $("prog").textContent="Správa "+(idx+1)+" / "+MSG.length;
+  $("score").textContent="Body: "+pts;
+  $("hint").textContent = mode==="easy"
+    ? (m.type==="phish"?"Nápoveda: v tejto správe je skrytých "+flags+" varovných signálov.":"Nápoveda: skontroluj, či sa tu naozaj niečo nezdá.")
+    : "Označ všetko podozrivé a rozhodni.";
+  $("fb").innerHTML=""; $("legend").classList.add("hidden");
+  $("actions").classList.remove("hidden"); $("next").hidden=true;
+  $("bp").disabled=$("bo").disabled=false;
+  document.querySelectorAll(".hs").forEach(function(el){
+    function t(){ if(answered) return; var on=el.classList.toggle("sel"); el.setAttribute("aria-pressed",on); }
+    el.addEventListener("click",t);
+    el.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();t()}});
+  });
+}
+function decide(sayPhish){
+  if(answered) return; answered=true;
+  var m=MSG[idx], isPhish=m.type==="phish";
+  var all=[].slice.call(document.querySelectorAll(".hs"));
+  var real=all.filter(function(e){return e.dataset.ok!=="1"}), decoy=all.filter(function(e){return e.dataset.ok==="1"});
+  var hit=0, fp=0;
+  all.forEach(function(el){
+    var sel=el.classList.contains("sel"), isDecoy=el.dataset.ok==="1";
+    el.classList.remove("sel"); el.classList.add("locked"); el.setAttribute("title",el.dataset.r);
+    if(isDecoy){ if(sel){el.classList.add("fp");fp++;} }
+    else if(sel){el.classList.add("hit");hit++;} else el.classList.add("miss");
+  });
+  var verdictOK=(sayPhish===isPhish);
+  var bonus = real.length ? Math.max(0,(hit-fp)/real.length) : (decoy.length?Math.max(0,1-fp/decoy.length):1);
+  pts += verdictOK ? 1+bonus : bonus*0.5; maxpts += 2;
+  var h="";
+  if(isPhish){
+    h+='<div class="fb '+(verdictOK?'good':'bad')+'"><b>'+(verdictOK?"✔ Správne – je to phishing.":"✘ Pozor – toto bol phishing!")+"</b> Našiel/-a si "+hit+" z "+real.length+" varovných signálov"+(fp?" a "+fp+" označených zbytočne":"")+".<ul>";
+    real.forEach(function(el){h+="<li>"+(el.classList.contains("hit")?"✅ ":"👀 ")+"<b>„"+esc(el.textContent)+"“</b> – "+esc(el.dataset.r)+"</li>"});
+    decoy.forEach(function(el){h+="<li>⚪ <b>„"+esc(el.textContent)+"“</b> – "+esc(el.dataset.r)+"</li>"});
+    h+="</ul></div>";
+  } else {
+    h+='<div class="fb '+(verdictOK?'good':'bad')+'"><b>'+(verdictOK?"✔ Správne – táto správa je dôveryhodná.":"✘ Táto správa bola v poriadku.")+"</b> Nepodozrievaj všetko – ale vždy overuj.<ul>";
+    decoy.forEach(function(el){h+="<li>"+(el.classList.contains("fp")?"⚪ ":"✅ ")+"<b>„"+esc(el.textContent)+"“</b> – "+esc(el.dataset.r)+"</li>"});
+    h+="</ul>Aj keď si nie si istý/-á, prihlás sa do služby cez vlastnú záložku, nie cez odkaz v správe.</div>";
+  }
+  $("fb").innerHTML=h;
+  $("legend").classList.remove("hidden");
+  $("actions").classList.add("hidden");
+  $("score").textContent="Body: "+(Math.round(pts*10)/10);
+  $("next").hidden=false; $("next").textContent = idx===MSG.length-1?"Výsledok ▶":"Ďalšia správa ▶";
+}
+function finish(){
+  $("game").classList.add("hidden"); $("end").classList.remove("hidden");
+  var pc=Math.round(pts/maxpts*100);
+  $("pct").textContent=pc+" %";
+  $("endtxt").textContent= pc>=85 ? "Skvelé! Si ostražitý/-á a vieš, na čo sa pozerať. Pomôž spolužiakom a ukáž im, ako si to robil/-a."
+    : pc>=60 ? "Dobrá práca. Pozri sa ešte raz na signály, ktoré si prehliadol/-a – v praxi bývajú podvody prepracovanejšie."
+    : "Je to v poriadku – na toto sa treba trénovať. Skús to znova na úrovni Ľahká a všímaj si nátlak, odosielateľa a odkaz.";
+}
+document.querySelectorAll(".mode button").forEach(function(b){b.addEventListener("click",function(){
+  mode=b.dataset.m; document.querySelectorAll(".mode button").forEach(function(x){x.setAttribute("aria-pressed",x===b)});
+})});
+function start(){idx=0;pts=0;maxpts=0;$("start").classList.add("hidden");$("end").classList.add("hidden");$("game").classList.remove("hidden");render();}
+$("go").addEventListener("click",start);
+$("again").addEventListener("click",function(){$("end").classList.add("hidden");$("start").classList.remove("hidden")});
+$("bp").addEventListener("click",function(){decide(true)});
+$("bo").addEventListener("click",function(){decide(false)});
+$("next").addEventListener("click",function(){ if(idx===MSG.length-1) finish(); else {idx++;render();} });
+</script>
+</body>
+</html>
