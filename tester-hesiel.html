@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tester hesiel</title>
+<style>
+  :root{
+    --navy:#14284b; --cyan:#0e8fa8; --pink:#d6336c; --bg:#f4f7fb; --card:#fff; --line:#dbe3ee; --txt:#1b2536; --mut:#5b6b82;
+    --bad:#d6336c; --weak:#f08c00; --mid:#e0b400; --good:#2f9e44; --great:#0b7a3e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);line-height:1.45}
+  .wrap{max-width:760px;margin:0 auto;padding:16px}
+  h1{font-size:1.35rem;margin:0 0 4px;color:var(--navy)}
+  .sub{color:var(--mut);margin:0 0 14px;font-size:.95rem}
+  .notice{background:#fff4e5;border:1px solid #ffd8a8;border-radius:10px;padding:10px 12px;font-size:.9rem;margin-bottom:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:.9rem;cursor:pointer;color:var(--navy)}
+  .tabs button[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+  label{font-weight:600;display:block;margin-bottom:6px}
+  .field{display:flex;gap:8px}
+  input[type=text],input[type=password]{flex:1;min-width:0;font:inherit;font-size:1.1rem;padding:11px 12px;border:2px solid var(--line);border-radius:10px;letter-spacing:.02em}
+  input:focus{outline:none;border-color:var(--cyan)}
+  .btn{border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;background:var(--cyan);color:#fff}
+  .btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+  .meter{height:14px;border-radius:99px;background:#e8edf4;overflow:hidden;margin:14px 0 6px}
+  .meter>i{display:block;height:100%;width:0;border-radius:99px;transition:width .25s,background .25s}
+  .verdict{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .verdict b{font-size:1.15rem}
+  .time{color:var(--mut);font-size:.95rem}
+  ul.chk{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:6px}
+  ul.chk li{display:flex;gap:8px;align-items:flex-start;font-size:.95rem}
+  ul.chk .ic{flex:0 0 22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;font-weight:700;color:#fff;background:#b8c2d2}
+  ul.chk li.ok .ic{background:var(--good)}
+  ul.chk li.no .ic{background:var(--bad)}
+  .warns{margin-top:12px;display:grid;gap:6px}
+  .warn{background:#fff0f5;border:1px solid #ffc9dc;border-radius:8px;padding:8px 10px;font-size:.92rem}
+  .adv{display:none;margin-top:12px;font-size:.9rem;color:var(--mut);border-top:1px dashed var(--line);padding-top:10px}
+  .adv.show{display:block}
+  .adv code{background:#eef2f8;padding:1px 6px;border-radius:5px}
+  .gen-out{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.15rem;background:#eef7f9;border:1px dashed var(--cyan);border-radius:10px;padding:12px;margin:10px 0;word-break:break-all}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .hint{color:var(--mut);font-size:.9rem}
+  .rank li{margin:6px 0}
+  .pw{font-family:ui-monospace,Menlo,Consolas,monospace;background:#eef2f8;border-radius:6px;padding:2px 7px}
+  .slot{display:flex;gap:8px;align-items:center;margin:8px 0}
+  .slot select{font:inherit;padding:7px;border-radius:8px;border:1px solid var(--line)}
+  .res{font-size:.95rem;margin-top:10px}
+  .hidden{display:none}
+  .sr{position:absolute;left:-9999px}
+  footer{color:var(--mut);font-size:.8rem;text-align:center;margin:10px 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔐 Tester hesiel</h1>
+  <p class="sub">Zisti, ako dlho by útočníkovi trvalo prelomiť heslo – a nauč sa vytvoriť silnejšie.</p>
+  <div class="notice"><b>Pozor:</b> nikdy tu nepíš svoje <u>skutočné</u> heslo. Tester všetko počíta iba vo tvojom prehliadači a nič neodosiela, ale zvyk je dôležitý – skúšaj <i>podobné</i> heslá, nie to, ktoré naozaj používaš.</div>
+
+  <div class="tabs" role="tablist">
+    <button data-tab="test" aria-pressed="true">1 · Otestuj</button>
+    <button data-tab="gen" aria-pressed="false">2 · Vymysli frázu</button>
+    <button data-tab="game" aria-pressed="false">3 · Zoraď heslá</button>
+  </div>
+
+  <!-- TEST -->
+  <section id="tab-test" class="card">
+    <label for="pw">Napíš skúšobné heslo</label>
+    <div class="field">
+      <input id="pw" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="napr. kristina2010">
+      <button class="btn ghost" id="toggle" type="button" aria-label="Skryť alebo zobraziť heslo">👁</button>
+    </div>
+    <div class="meter" aria-hidden="true"><i id="bar"></i></div>
+    <div class="verdict" aria-live="polite">
+      <b id="label">Začni písať…</b>
+      <span class="time" id="time"></span>
+    </div>
+    <ul class="chk" id="chk"></ul>
+    <div class="warns" id="warns"></div>
+    <div class="row" style="margin-top:12px">
+      <label style="margin:0;font-weight:500;font-size:.9rem"><input type="checkbox" id="advToggle"> Zobraziť pokročilé údaje (pre zvedavých)</label>
+    </div>
+    <div class="adv" id="adv"></div>
+  </section>
+
+  <!-- GENERATOR -->
+  <section id="tab-gen" class="card hidden">
+    <b>Heslová fráza: dlhé, ale zapamätateľné</b>
+    <p class="hint">Namiesto „zložitého“ hesla použi 4–5 náhodných slov. Dlhé heslo je pre počítač ťažšie než krátke so symbolmi – a ty si ho zapamätáš ako vetu.</p>
+    <div class="row">
+      <label style="margin:0;font-weight:500">Počet slov:
+        <select id="nwords"><option>3</option><option selected>4</option><option>5</option><option>6</option></select>
+      </label>
+      <label style="margin:0;font-weight:500"><input type="checkbox" id="addnum" checked> pridať číslo a symbol</label>
+    </div>
+    <div class="gen-out" id="genout">–</div>
+    <div class="row">
+      <button class="btn" id="gen" type="button">🎲 Vygenerovať</button>
+      <button class="btn ghost" id="sendtest" type="button">Otestovať túto frázu</button>
+    </div>
+    <p class="hint" style="margin-top:12px"><b>Tip:</b> vymysli si vlastnú vetu („Moja mačka Rexi pije kávu v utorok!“) a z nej vytvor heslo. Vygenerovanú frázu nepoužívaj naozaj – je verejne zobrazená. Pre skutočné účty použi správcu hesiel.</p>
+  </section>
+
+  <!-- GAME -->
+  <section id="tab-game" class="card hidden">
+    <b>Úloha z hodiny: zoraď heslá od najslabšieho po najsilnejšie</b>
+    <p class="hint">Najprv tipni, až potom si nechaj heslá vyhodnotiť testerom.</p>
+    <div id="slots"></div>
+    <div class="row"><button class="btn" id="check" type="button">Vyhodnotiť</button><button class="btn ghost" id="reset" type="button">Znova</button></div>
+    <div class="res" id="gres"></div>
+  </section>
+
+  <footer>Vzdelávacia pomôcka · SOŠ pedagogická Prešov · Odhad času je orientačný (útok rýchlosťou 10 miliárd pokusov za sekundu pri uniknutej databáze).</footer>
+</div>
+
+<script>
+(function(){
+  // ---------- dáta ----------
+  var COMMON = ["123456","1234567","12345678","123456789","1234567890","password","heslo","heslo123","heslo1","qwerty","qwertz","qwerty123","abc123","111111","000000","iloveyou","admin","letmein","welcome","monkey","dragon","slovensko","bratislava","kosice","presov","futbal","hokej","lubim","miluju","ahoj","ahoj123","cau","cau123","jahoda","maminka","tatino","sparta","slovan","fortnite","minecraft","roblox","tiktok","snapchat","instagram","football","master","login","princess","sunshine","superman","batman","michal","peter","martin","jakub","tomas","marek","adam","lukas","kristina","katarina","jana","lucia","zuzana","simona","nikola","veronika"];
+  var KEYROWS = ["qwertyuiop","asdfghjkl","zxcvbnm","qwertzuiop","yxcvbnm","1234567890","0987654321"];
+  var WORDS = ["slnko","kvet","hrad","motyl","jahoda","oblak","kamen","potok","vlak","strom","mesiac","pole","zima","lampa","hviezda","dazd","lopta","kniha","hora","zajac","ryba","vietor","citron","gitara","okno","most","lod","medved","rieka","raketa","kaktus","pernik","pavuk","pirat","draak","cokolada","bicykel","ostrov","tunel","lietadlo","kompas","jablko","hruska","sova","vlk","luka","jazero","dvere","skala","mrak","kanal","koruna","plamen","vrabec","sneh","kocka","pes","rak","zvon","hodiny","kluc"];
+  var $ = function(id){return document.getElementById(id)};
+
+  function norm(s){return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"")}
+  function leet(s){return s.replace(/0/g,"o").replace(/1/g,"i").replace(/3/g,"e").replace(/4/g,"a").replace(/5/g,"s").replace(/7/g,"t").replace(/@/g,"a").replace(/\$/g,"s").replace(/!/g,"i")}
+
+  function analyze(pw){
+    var warns=[], len=pw.length;
+    var lower=/[a-záäčďéíĺľňóôŕšťúýž]/.test(pw), upper=/[A-ZÁÄČĎÉÍĹĽŇÓÔŔŠŤÚÝŽ]/.test(pw), digit=/\d/.test(pw), sym=/[^A-Za-z0-9áäčďéíĺľňóôŕšťúýžÁÄČĎÉÍĹĽŇÓÔŔŠŤÚÝŽ]/.test(pw);
+    var pool=0; if(lower)pool+=26; if(upper)pool+=26; if(digit)pool+=10; if(sym)pool+=33;
+    var n=norm(pw), l=leet(n).replace(/[^a-z0-9]/g,"");
+    var plain=n.replace(/[^a-z0-9]/g,"");
+    var effLen=0; for(var k=0;k<len;k++){ if(k===0||pw[k]!==pw[k-1]) effLen++; }
+    var bits = effLen*Math.log2(Math.max(pool,1));
+    var penalty=0;
+
+    // bežné heslá / slová
+    var isCommon = COMMON.indexOf(plain)>-1 || COMMON.indexOf(l)>-1;
+    if(isCommon){warns.push("Toto heslo (alebo jeho mierna úprava) patrí medzi najčastejšie – útočník ho vyskúša ako prvé.");bits=Math.min(bits,12);}
+    else {
+      var stripped=l.replace(/\d+$/,"");
+      var hit=COMMON.filter(function(w){return w.length>=4 && (stripped.indexOf(w)===0 || stripped===w)});
+      if(hit.length){warns.push("Začína bežným slovom alebo menom („"+hit[0]+"“) – takéto heslá sa hádajú slovníkom.");penalty+=bits*0.5;}
+      else if(COMMON.some(function(w){return w.length>=5 && l.indexOf(w)>-1})){warns.push("Obsahuje bežné slovo alebo meno, ktoré sa dá uhádnuť.");penalty+=10;}
+    }
+    // dátumy / roky
+    if(/(19|20)\d{2}$/.test(pw)||/\b\d{6}\b/.test(pw)&&!isCommon){warns.push("Rok alebo dátum na konci je typický vzor – útočníci ho skúšajú automaticky.");penalty+=8;}
+    // opakovanie
+    if(/(.)\1{2,}/.test(pw)){warns.push("Opakujú sa rovnaké znaky za sebou.");penalty+=8;}
+    // sekvencie
+    var low=pw.toLowerCase(), seq=false;
+    KEYROWS.concat(["abcdefghijklmnopqrstuvwxyz"]).forEach(function(r){
+      for(var i=0;i+4<=r.length;i++){var s=r.substr(i,4); if(low.indexOf(s)>-1||low.indexOf(s.split("").reverse().join(""))>-1) seq=true;}
+    });
+    if(seq){warns.push("Obsahuje postupnosť z klávesnice alebo abecedy (napr. qwer, 1234, abcd).");penalty+=10;}
+    // jeden typ znakov
+    if(len>0 && !(upper||sym||digit)){warns.push("Iba malé písmená – chýba zmes znakov.");}
+    if(len>0 && /^\d+$/.test(pw)){warns.push("Iba čísla – prelomí sa takmer okamžite.");}
+    // jednoduché nahrádzanie
+    if(!isCommon && /[0134@$57]/.test(pw) && COMMON.every(function(w){return plain.indexOf(w)<0}) && COMMON.some(function(w){return w.length>=4&&l.indexOf(w)>-1})){warns.push("Náhrada písmen číslami (a→4, o→0) útočníkov nezmätie – tieto triky poznajú.");penalty+=6;}
+
+    bits=Math.max(0,bits-penalty);
+    // škála
+    var level, label, color, pct;
+    if(len===0){level=-1}
+    else if(bits<28){level=0;label="Veľmi slabé";color="var(--bad)";}
+    else if(bits<40){level=1;label="Slabé";color="var(--weak)";}
+    else if(bits<60){level=2;label="Stredné";color="var(--mid)";}
+    else if(bits<80){level=3;label="Silné";color="var(--good)";}
+    else {level=4;label="Veľmi silné";color="var(--great)";}
+    pct = level<0?0:Math.min(100,Math.max(6,Math.round(bits/90*100)));
+    // čas
+    var guesses=Math.pow(2,bits)/2, secs=guesses/1e10;
+    return {len:len,lower:lower,upper:upper,digit:digit,sym:sym,pool:pool,bits:bits,level:level,label:label,color:color,pct:pct,secs:secs,warns:warns,isCommon:isCommon};
+  }
+
+  function human(s){
+    if(s<1) return "okamžite (menej ako sekunda)";
+    var u=[[60,"sekúnd"],[60,"minút"],[24,"hodín"],[365,"dní"],[100,"rokov"],[10,"storočí"]];
+    var v=s,units=["sekúnd","minút","hodín","dní","rokov"];
+    if(v<60) return "asi "+Math.round(v)+" sekúnd";
+    v/=60; if(v<60) return "asi "+Math.round(v)+" minút";
+    v/=60; if(v<24) return "asi "+Math.round(v)+" hodín";
+    v/=24; if(v<365) return "asi "+Math.round(v)+" dní";
+    v/=365; if(v<1000) return "asi "+Math.round(v)+" rokov";
+    if(v<1e6) return "asi "+Math.round(v/1000)+" tisíc rokov";
+    if(v<1e9) return "asi "+Math.round(v/1e6)+" miliónov rokov";
+    return "miliardy rokov";
+  }
+
+  function render(){
+    var pw=$("pw").value, a=analyze(pw);
+    var bar=$("bar");
+    bar.style.width=a.pct+"%"; bar.style.background=a.color||"transparent";
+    $("label").textContent = a.level<0?"Začni písať…":a.label;
+    $("label").style.color=a.color||"inherit";
+    $("time").textContent = a.level<0?"":"Prelomenie: "+human(a.secs);
+    var items=[
+      [a.len>=12,"Aspoň 12 znakov"+(a.len?" (máš "+a.len+")":"")],
+      [a.upper&&a.lower,"Veľké aj malé písmená"],
+      [a.digit,"Obsahuje číslo"],
+      [a.sym,"Obsahuje symbol (! ? # …)"],
+      [a.len>0&&!a.isCommon&&a.warns.length===0,"Neobsahuje nič ľahko uhádnuteľné"]
+    ];
+    $("chk").innerHTML=items.map(function(it){
+      var cls=a.len===0?"":(it[0]?"ok":"no");
+      return '<li class="'+cls+'"><span class="ic">'+(a.len===0?"•":(it[0]?"✓":"✕"))+'</span><span>'+it[1]+'</span></li>';
+    }).join("");
+    $("warns").innerHTML=a.warns.map(function(w){return '<div class="warn">⚠ '+w+'</div>'}).join("");
+    $("adv").innerHTML = a.len===0?"":
+      "Dĺžka: <code>"+a.len+"</code> · Veľkosť „abecedy“: <code>"+a.pool+"</code> znakov · Odhad entropie: <code>"+a.bits.toFixed(1)+" bitov</code> · Počet možností ≈ <code>2<sup>"+Math.round(a.bits)+"</sup></code><br>Každý ďalší znak násobí počet možností – preto je dĺžka dôležitejšia než „čudné“ znaky.";
+  }
+  $("pw").addEventListener("input",render);
+  $("toggle").addEventListener("click",function(){var i=$("pw");i.type=i.type==="text"?"password":"text";});
+  $("advToggle").addEventListener("change",function(){$("adv").classList.toggle("show",this.checked)});
+  render();
+
+  // ---------- záložky ----------
+  var tabs=document.querySelectorAll(".tabs button");
+  function showTab(t){
+    tabs.forEach(function(b){b.setAttribute("aria-pressed",b.dataset.tab===t)});
+    ["test","gen","game"].forEach(function(x){$("tab-"+x).classList.toggle("hidden",x!==t)});
+  }
+  tabs.forEach(function(b){b.addEventListener("click",function(){showTab(b.dataset.tab)})});
+
+  // ---------- generátor ----------
+  function rnd(n){var a=new Uint32Array(1);var lim=Math.floor(4294967296/n)*n;do{crypto.getRandomValues(a)}while(a[0]>=lim);return a[0]%n}
+  function gen(){
+    var n=+$("nwords").value, w=[];
+    for(var i=0;i<n;i++){var x=WORDS[rnd(WORDS.length)]; if(rnd(2)) x=x[0].toUpperCase()+x.slice(1); w.push(x)}
+    var s=w.join("-");
+    if($("addnum").checked) s+="-"+(10+rnd(90))+"!?#+*".charAt(rnd(5));
+    $("genout").textContent=s;
+  }
+  $("gen").addEventListener("click",gen); gen();
+  $("sendtest").addEventListener("click",function(){$("pw").value=$("genout").textContent;showTab("test");render();});
+
+  // ---------- hra ----------
+  var GAME=["kristina2010","Sl0vensko!Jar25","heslo123","P#7mQz!v9Lk2"];
+  var order=[2,0,1,3]; // správne poradie indexov (najslabšie → najsilnejšie): heslo123, kristina2010, Sl0vensko!Jar25, P#7mQz!v9Lk2
+  var shuffled=[3,1,0,2];
+  function buildSlots(){
+    var h="";
+    for(var i=0;i<4;i++){
+      h+='<div class="slot"><b>'+(i+1)+'.</b><select id="s'+i+'"><option value="">– vyber heslo –</option>'+GAME.map(function(g,j){return '<option value="'+j+'">'+g.replace(/</g,"&lt;")+'</option>'}).join("")+'</select><span class="hint">'+(i===0?"najslabšie":i===3?"najsilnejšie":"")+'</span></div>';
+    }
+    $("slots").innerHTML=h; $("gres").innerHTML="";
+  }
+  buildSlots();
+  $("reset").addEventListener("click",buildSlots);
+  $("check").addEventListener("click",function(){
+    var pick=[],i; for(i=0;i<4;i++) pick.push($("s"+i).value);
+    if(pick.indexOf("")>-1||new Set(pick).size<4){$("gres").innerHTML='<span class="warn">Vyber v každom riadku iné heslo.</span>';return}
+    var ok=0; for(i=0;i<4;i++) if(+pick[i]===order[i]) ok++;
+    var out=(ok===4?"🎉 <b>Presne tak!</b> ":"Zhoda na "+ok+" z 4 miest. ")+"Takto ich hodnotí tester:<ol class='rank'>";
+    order.forEach(function(j){var a=analyze(GAME[j]);out+="<li><span class='pw'>"+GAME[j]+"</span> – <b style='color:"+a.color+"'>"+a.label+"</b>, prelomenie "+human(a.secs)+(a.warns[0]?"<br><span class='hint'>"+a.warns[0]+"</span>":"")+"</li>"});
+    out+="</ol><p class='hint'>Zamysli sa: ktoré pravidlá silného hesla porušujú tie slabšie? Skús ich vylepšiť v záložke 1.</p>";
+    $("gres").innerHTML=out;
+  });
+})();
+</script>
+</body>
+</html>
