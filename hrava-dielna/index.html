@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hravá dielňa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800;900&display=swap">
+<style id="app-css">
+/* Layout: workshop shelf — type tiles on top, teacher's library below; editor = form left, live child view right. */
+:root{
+  --bg:#EDF2F9; --surface:#FFFFFF; --surface-2:#F5F8FC; --ink:#1B2440; --muted:#5A6582; --line:#D5DDEA;
+  --accent:#2D6BE4; --accent-ink:#FFFFFF; --ok:#14874A; --ok-bg:#DCF4E6; --bad:#C9372F; --bad-bg:#FCE2DF;
+  --sun:#F2B705; --secret:#FFE7A0;
+  --font-display:'Baloo 2','Trebuchet MS','Segoe UI',system-ui,sans-serif;
+  --font-body:'Nunito','Segoe UI',system-ui,-apple-system,sans-serif;
+  --shadow:0 1px 2px rgb(27 36 64 / .06),0 6px 18px rgb(27 36 64 / .07);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10162A; --surface:#19213A; --surface-2:#202A46; --ink:#E9EDF7; --muted:#A3ADC7; --line:#2F3B5C;
+  --accent:#729DFF; --accent-ink:#0D1325; --ok:#46D08B; --ok-bg:#16392A; --bad:#FF7B70; --bad-bg:#45211F;
+  --sun:#FFCB3D; --secret:#4D3F12; --shadow:0 1px 2px rgb(0 0 0 / .3),0 6px 18px rgb(0 0 0 / .25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10162A; --surface:#19213A; --surface-2:#202A46; --ink:#E9EDF7; --muted:#A3ADC7; --line:#2F3B5C;
+  --accent:#729DFF; --accent-ink:#0D1325; --ok:#46D08B; --ok-bg:#16392A; --bad:#FF7B70; --bad-bg:#45211F;
+  --sun:#FFCB3D; --secret:#4D3F12; --shadow:0 1px 2px rgb(0 0 0 / .3),0 6px 18px rgb(0 0 0 / .25); color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--font-body);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+h1,h2,h3{font-family:var(--font-display);line-height:1.15;text-wrap:balance;margin:0;font-weight:800}
+p{margin:0}
+button{font-family:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:2px}
+.wrap{max-width:1200px;margin:0 auto}
+.muted{color:var(--muted)}
+
+/* buttons */
+.btn{font:800 .95rem/1.2 var(--font-body);display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:12px;
+  border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-height:42px;text-decoration:none;transition:border-color .15s,background .15s,transform .1s}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 10px;min-height:36px;font-size:.88rem;border-radius:10px}
+.btn.big{font-size:1.1em;padding:.7em 1.4em;border-radius:14px}
+.btn.danger{color:var(--bad)}
+.btn.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icon-btn{flex:none;width:34px;height:34px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-weight:900;font-size:.85rem;display:inline-grid;place-items:center;padding:0}
+.icon-btn:hover:not(:disabled){border-color:var(--accent)}
+.icon-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:14px;max-width:1200px;margin:0 auto;border-bottom:1.5px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;background:none;border:0;color:inherit;cursor:pointer;padding:0;text-align:left}
+.brand-name{font:800 1.4rem/1 var(--font-display)}
+.brand-sub{display:block;font:700 .78rem/1.3 var(--font-body);color:var(--muted)}
+.bar-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* home */
+.intro{padding-block:28px 18px;display:flex;flex-direction:column;gap:8px;max-width:60ch}
+.intro h1{font-size:clamp(1.9rem,1.4rem + 2vw,2.7rem)}
+.lead{font-size:1.08rem;color:var(--muted)}
+.sec-h{font-size:1.35rem;display:flex;align-items:center;gap:8px}
+.count{font:800 .85rem var(--font-body);background:var(--surface);border:1.5px solid var(--line);border-radius:99px;padding:1px 9px;color:var(--muted)}
+.home section{display:flex;flex-direction:column;gap:14px;margin-top:22px}
+.sec-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,215px),1fr));gap:12px}
+.type-tile{text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;align-items:start;padding:14px;border-radius:16px;border:1.5px solid var(--line);
+  background:var(--surface);cursor:pointer;color:inherit;font:inherit;transition:border-color .15s,transform .15s,box-shadow .15s}
+.type-tile:hover{border-color:var(--tc);transform:translateY(-2px);box-shadow:var(--shadow)}
+.type-ico{grid-row:span 3;width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:27px;background:color-mix(in srgb,var(--tc) 18%,var(--surface))}
+.type-tile strong{font:800 1.12rem/1.2 var(--font-display)}
+.type-tile .desc{font-size:.88rem;color:var(--muted);line-height:1.35}
+.age{justify-self:start;font-size:.72rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--tc);margin-top:4px}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:14px}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card-top{display:flex;align-items:center;gap:10px}
+.card-top .type-ico{width:40px;height:40px;font-size:21px;border-radius:12px;grid-row:auto}
+.type-name{font-size:.8rem;font-weight:900;color:var(--tc);text-transform:uppercase;letter-spacing:.05em}
+.tag{font-size:.72rem;font-weight:800;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:0 8px;margin-left:6px}
+.card-title{font-size:1.2rem;overflow-wrap:anywhere}
+.card-sub{font-size:.86rem;color:var(--muted)}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:6px;align-items:center}
+.more{position:relative}
+.more>summary{list-style:none;cursor:pointer}
+.more>summary::-webkit-details-marker{display:none}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;min-width:230px}
+.menu button{background:none;border:0;text-align:left;padding:9px 10px;border-radius:9px;font:700 .92rem var(--font-body);color:var(--ink);cursor:pointer}
+.menu button:hover{background:var(--surface-2)}
+.menu .danger{color:var(--bad)}
+.empty-lib{padding:24px;border:2px dashed var(--line);border-radius:16px;color:var(--muted);text-align:center}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px;counter-reset:st;list-style:none;padding:0;margin:0}
+.steps li{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;counter-increment:st}
+.steps li::before{content:counter(st);width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font:800 1rem var(--font-display);margin-bottom:4px}
+.steps strong{font-family:var(--font-display);font-size:1.05rem}
+.steps span{color:var(--muted);font-size:.92rem}
+.note{font-size:.9rem;color:var(--muted);background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px}
+
+/* editor */
+.ed-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding-block:16px}
+.ed-type{display:flex;align-items:center;gap:10px}
+.ed-type .type-ico{width:40px;height:40px;font-size:21px;border-radius:12px}
+.ed-type h1{font-size:1.4rem}
+.ed-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ed-grid{display:grid;gap:20px;grid-template-columns:minmax(0,1fr);align-items:start}
+@media (min-width:1000px){.ed-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.08fr)}
+  .ed-preview{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}}
+.ed-form{display:flex;flex-direction:column;gap:16px;min-width:0}
+.ed-block{background:var(--surface);border:1.5px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.ed-h{font-size:1.15rem}
+.prev-label{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-weight:800;font-size:.88rem;color:var(--muted);margin-bottom:8px}
+.saved{font-weight:700}
+.saved.warn{color:var(--bad)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lbl{font-weight:800;font-size:.9rem}
+.lbl small{font-weight:600;color:var(--muted);font-size:.84rem}
+.inp{font:inherit;font-size:1rem;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink);width:100%;min-width:0}
+.inp:focus{border-color:var(--accent)}
+textarea.inp{resize:vertical;line-height:1.55}
+select.inp{cursor:pointer}
+.upper{text-transform:uppercase;letter-spacing:.06em;font-weight:800}
+.list{display:flex;flex-direction:column;gap:12px}
+.row-card{border:1.5px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface-2);min-width:0}
+.row-card .inp{background:var(--surface)}
+.row-tools,.row-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.row-num{font-weight:900;margin-right:auto;font-size:.92rem}
+.row-head strong{margin-right:auto}
+.add{align-self:flex-start;border-style:dashed}
+.pic-field{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pic-field .inp{flex:1 1 130px}
+.thumb{width:50px;height:50px;border-radius:10px;border:1.5px solid var(--line);display:grid;place-items:center;overflow:hidden;background:var(--surface);flex:none}
+.thumb .ct-emoji{font-size:28px}
+.thumb .ct-word{font-size:.68rem;font-weight:800;text-align:center;padding:2px;overflow-wrap:anywhere;line-height:1.1}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb-empty{color:var(--muted)}
+.answers{display:flex;flex-direction:column;gap:8px}
+.ans-row{display:flex;gap:6px;align-items:center}
+.ans-row .inp{flex:1}
+.okmark{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:var(--ok);font-weight:900;cursor:pointer;padding:0}
+.okmark.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.chip{font-size:.8rem;font-weight:800;padding:3px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.chip-ok{color:var(--ok);border-color:var(--ok);background:var(--ok-bg)}
+.chip-bad{color:var(--bad);border-color:var(--bad);background:var(--bad-bg)}
+.letter-badge{width:32px;height:32px;border-radius:8px;background:var(--secret);display:grid;place-items:center;font:800 1.1rem var(--font-display)}
+.switch{display:flex;gap:10px;align-items:center;font-weight:700;cursor:pointer}
+.switch input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;align-self:flex-start}
+.seg button{border:0;background:var(--surface);color:var(--ink);font:800 .9rem var(--font-body);padding:8px 14px;cursor:pointer}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.hint{color:var(--muted);font-size:.9rem}
+.hint code{font-weight:800;color:var(--ink);background:var(--surface-2);padding:0 4px;border-radius:4px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px}
+.emoji-pop{position:absolute;z-index:60;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:2px;max-height:270px;overflow:auto}
+.emo{font-size:22px;background:none;border:0;border-radius:8px;cursor:pointer;height:38px;padding:0}
+.emo:hover{background:var(--surface-2)}
+
+/* player */
+.player{background:var(--surface);border:1.5px solid var(--line);border-radius:22px;padding:1.1em;display:flex;flex-direction:column;gap:1em;font-size:1rem;min-width:0}
+.player.big{font-size:clamp(1rem,.78rem + .9vw,1.42rem);max-width:1100px;margin:0 auto}
+.p-head{display:flex;gap:.8em;align-items:center}
+.p-badge{width:2.5em;height:2.5em;border-radius:.75em;display:grid;place-items:center;font-size:1.25em;background:color-mix(in srgb,var(--tc) 18%,var(--surface));flex:none}
+.p-titles{flex:1;min-width:0}
+.p-title{font-size:1.45em;overflow-wrap:anywhere}
+.p-instr{color:var(--muted);margin-top:.1em}
+.speak{flex:none;width:2.3em;height:2.3em;border-radius:50%;border:1.5px solid var(--line);background:var(--surface-2);cursor:pointer;font-size:1em;padding:0;display:inline-grid;place-items:center}
+.speak:hover{border-color:var(--tc)}
+.p-body{display:flex;flex-direction:column;gap:1em;min-width:0}
+.p-prog{display:flex;align-items:center;gap:.35em;flex-wrap:wrap}
+.dot{width:.7em;height:.7em;border-radius:50%;background:var(--line)}
+.dot.done{background:var(--tc)}
+.dot.now{background:var(--tc);box-shadow:0 0 0 .22em color-mix(in srgb,var(--tc) 30%,transparent)}
+.p-prog .num{margin-left:auto;font-weight:900;color:var(--muted);font-variant-numeric:tabular-nums}
+.q-card{display:flex;flex-direction:column;align-items:center;gap:.6em;text-align:center;padding:.3em}
+.ct-emoji{line-height:1.1}
+.ct-word{overflow-wrap:anywhere}
+.q-pic.ct-emoji{font-size:4.2em}
+.q-pic.ct-img{max-height:9em;border-radius:.6em}
+.q-pic.ct-word{font:800 2em var(--font-display)}
+.q-line{display:flex;gap:.6em;align-items:center;justify-content:center}
+.q-text{font:800 1.4em/1.25 var(--font-display)}
+.ans-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12em),1fr));gap:.7em}
+.ans-grid.pics{grid-template-columns:repeat(auto-fit,minmax(5.5em,1fr))}
+.ans,.match{font:800 1.2em/1.2 var(--font-display);color:var(--ink);min-height:3.1em;padding:.45em .8em;border-radius:.8em;border:2px solid var(--line);background:var(--surface-2);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4em;text-align:center;transition:border-color .15s,background .15s}
+.ans .ct-emoji,.match .ct-emoji{font-size:1.9em}
+.ans .ct-img,.match .ct-img{max-height:5em;border-radius:.4em}
+.ans:hover:not(:disabled),.match:hover:not(.done){border-color:var(--tc)}
+.ans:disabled{cursor:default}
+.ans.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);animation:pop .3s}
+.ans.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad);animation:shake .35s}
+.ans.reveal{border-color:var(--ok);border-style:dashed}
+.tf-row{display:grid;grid-template-columns:1fr 1fr;gap:.8em}
+.tf-row .ans{font-size:1.35em;min-height:3.4em}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.07)}100%{transform:scale(1)}}
+.p-actions{display:flex;gap:.6em;justify-content:center;flex-wrap:wrap}
+.p-status{text-align:center;font-weight:800;min-height:1.5em}
+.p-status.good{color:var(--ok)}
+.p-status.badtxt{color:var(--bad)}
+.p-empty{color:var(--muted);text-align:center;padding:2em 1em}
+.p-hint{color:var(--muted);text-align:center;font-size:.92em}
+.p-end{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.6em;padding:1.4em .5em}
+.stars{font-size:3em;display:flex;gap:.15em;line-height:1}
+.star{color:var(--line)}
+.star.on{color:var(--sun);animation:pop .45s backwards}
+.star.on:nth-child(2){animation-delay:.15s}.star.on:nth-child(3){animation-delay:.3s}
+.p-end h3{font-size:1.8em}
+.p-score{font-weight:800;font-size:1.1em}
+
+/* tajnička */
+.tj-wrap{overflow-x:auto;padding:4px}
+.tj-grid{display:grid;gap:3px;width:max-content;margin:0 auto;font-size:1.1em}
+.tj-num{display:grid;place-items:center;font-weight:900;color:var(--muted);font-size:.85em}
+.tj-cell{width:2.1em;height:2.1em;text-align:center;font:800 1em var(--font-display);text-transform:uppercase;border:2px solid color-mix(in srgb,var(--ink) 55%,var(--line));border-radius:6px;background:var(--surface);color:var(--ink);padding:0;caret-color:var(--tc)}
+.tj-cell.secret{background:var(--secret);border-color:color-mix(in srgb,var(--sun) 65%,var(--ink))}
+.tj-cell.ok{background:var(--ok-bg);border-color:var(--ok)}
+.tj-cell.bad{background:var(--bad-bg);border-color:var(--bad)}
+.tj-clues{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.4em}
+.tj-clues li{display:flex;align-items:center;gap:.6em;padding:.4em .6em;border-radius:.6em;background:var(--surface-2)}
+.tj-cn{font-weight:900;min-width:1.6em}
+.tj-pic.ct-emoji{font-size:1.6em}
+.tj-pic.ct-img{height:2.4em;border-radius:.3em}
+.tj-pic.ct-word{font-weight:800}
+.tj-ct{flex:1;min-width:0}
+.tj-len{font-size:.8em;color:var(--muted);white-space:nowrap}
+.speak.sm{width:1.9em;height:1.9em;font-size:.85em}
+
+/* pexeso */
+.pex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(5.6em,1fr));gap:.6em}
+.pex{aspect-ratio:1;border:0;padding:0;background:none;cursor:pointer;perspective:700px;max-width:100%;font:inherit;color:inherit}
+.pex-inner{position:relative;display:block;width:100%;height:100%;transition:transform .35s;transform-style:preserve-3d}
+.pex.open .pex-inner,.pex.done .pex-inner{transform:rotateY(180deg)}
+.pex-back,.pex-front{position:absolute;inset:0;border-radius:.8em;display:grid;place-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.pex-back{background:var(--tc);color:#fff;font:800 2em var(--font-display);
+  background-image:radial-gradient(circle at 25% 25%,rgb(255 255 255 / .22) 0 12%,transparent 13%),radial-gradient(circle at 75% 75%,rgb(255 255 255 / .22) 0 12%,transparent 13%)}
+.pex-front{background:var(--surface);border:2px solid var(--line);transform:rotateY(180deg);padding:.3em}
+.pex.done .pex-front{border-color:var(--ok);background:var(--ok-bg)}
+.pex-front .ct-emoji{font-size:2.5em}
+.pex-front .ct-word{font:800 1.05em/1.1 var(--font-display);text-align:center}
+.pex-front .ct-img{max-width:100%;max-height:100%;object-fit:contain}
+
+/* priraďovanie */
+.match-cols{display:grid;grid-template-columns:1fr 1fr;gap:1em 2em}
+.match-col{display:flex;flex-direction:column;gap:.6em;min-width:0}
+.match{position:relative}
+.match.sel{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 15%,var(--surface));box-shadow:0 0 0 3px color-mix(in srgb,var(--tc) 30%,transparent)}
+.match.done{border-color:var(--mc);background:color-mix(in srgb,var(--mc) 18%,var(--surface));cursor:default}
+.mbadge{position:absolute;top:-.55em;right:-.55em;width:1.7em;height:1.7em;border-radius:50%;background:var(--mc);color:#fff;font:800 .75rem var(--font-display);display:grid;place-items:center}
+
+/* doplňovačka */
+.gap-text{font-size:1.2em;line-height:2.3;white-space:pre-wrap;overflow-wrap:anywhere}
+.gap-slot,.gap-inp{font:inherit;font-weight:900;line-height:1.5;color:var(--ink);border:0;border-bottom:3px solid var(--tc);background:color-mix(in srgb,var(--tc) 10%,var(--surface));border-radius:.35em .35em 0 0;padding:0 .45em;text-align:center}
+.gap-slot{min-width:3em;cursor:pointer}
+.gap-slot.sel{box-shadow:0 0 0 3px color-mix(in srgb,var(--tc) 45%,transparent)}
+.gap-slot.ok,.gap-inp.ok{background:var(--ok-bg);border-color:var(--ok)}
+.gap-slot.bad,.gap-inp.bad{background:var(--bad-bg);border-color:var(--bad)}
+.bank{display:flex;flex-wrap:wrap;gap:.5em;justify-content:center;padding:.6em;border-radius:.8em;background:var(--surface-2)}
+.chip-word{font:800 1.1em var(--font-display);padding:.3em .9em;border-radius:99px;border:2px solid var(--tc);background:var(--surface);color:var(--ink);cursor:pointer}
+
+/* osemsmerovka */
+.ws-wrap{display:flex;flex-wrap:wrap;gap:1em;align-items:flex-start}
+.ws-grid{flex:1 1 17em;max-width:34em;display:grid;gap:2px;touch-action:none;user-select:none;-webkit-user-select:none;container-type:inline-size}
+.ws-cell{aspect-ratio:1;display:grid;place-items:center;font:800 1em var(--font-display);font-size:calc(100cqi / var(--n) * .52);background:var(--surface-2);border:1px solid var(--line);border-radius:.25em;cursor:pointer;color:var(--ink)}
+.ws-cell.sel{background:color-mix(in srgb,var(--tc) 38%,var(--surface))}
+.ws-cell.found{background:color-mix(in srgb,var(--fc) 32%,var(--surface));border-color:var(--fc)}
+.ws-cell.flash{background:var(--bad-bg)}
+.ws-words{flex:1 1 9em;list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:.4em;align-content:flex-start}
+.ws-words li{font:800 1em var(--font-display);padding:.2em .75em;border-radius:99px;background:var(--surface-2);border:1.5px solid var(--line)}
+.ws-words li.found{text-decoration:line-through;color:var(--muted);background:var(--ok-bg);border-color:var(--ok)}
+
+/* zoraďovanie */
+.sort-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.5em}
+.sort-item{display:flex;align-items:center;gap:.6em;padding:.4em .5em;border-radius:.8em;border:2px solid var(--line);background:var(--surface-2)}
+.sort-item.sel{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 14%,var(--surface))}
+.sort-item.ok{border-color:var(--ok);background:var(--ok-bg)}
+.sort-item.bad{border-color:var(--bad);background:var(--bad-bg)}
+.sort-n{width:2em;height:2em;border-radius:50%;background:var(--tc);color:#fff;display:grid;place-items:center;font:800 1em var(--font-display);flex:none}
+.sort-main{flex:1;display:flex;align-items:center;gap:.6em;background:none;border:0;font:800 1.1em var(--font-display);color:var(--ink);text-align:left;cursor:pointer;padding:.2em;min-width:0}
+.sort-pic.ct-emoji{font-size:1.8em}
+.sort-pic.ct-img{height:2.6em;border-radius:.3em}
+.sort-arrows{display:flex;gap:.3em}
+
+/* triedenie */
+.pool{display:flex;flex-wrap:wrap;gap:.5em;justify-content:center;min-height:3.6em;padding:.6em;border-radius:.8em;background:var(--surface-2);align-items:center}
+.chip-item{font:800 1.05em var(--font-display);padding:.25em .7em;border-radius:.7em;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:grab;display:inline-flex;align-items:center;transition:transform .12s}
+.chip-item .ct-emoji{font-size:1.7em}
+.chip-item .ct-img{height:2.8em;border-radius:.3em}
+.chip-item.sel{border-color:var(--tc);box-shadow:0 0 0 3px color-mix(in srgb,var(--tc) 35%,transparent);transform:translateY(-3px)}
+.chip-item:disabled{cursor:default;border-color:var(--ok);background:var(--ok-bg)}
+.buckets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,10em),1fr));gap:.7em}
+.bucket{border:2.5px dashed color-mix(in srgb,var(--tc) 55%,var(--line));border-radius:1em;padding:.6em;min-height:7.5em;cursor:pointer;display:flex;flex-direction:column;gap:.5em;background:var(--surface)}
+.bucket:hover{border-style:solid}
+.bucket-head{display:flex;align-items:center;gap:.4em;font:800 1.15em var(--font-display)}
+.bucket-pic.ct-emoji{font-size:1.4em}
+.bucket-pic.ct-img{height:2em;border-radius:.3em}
+.bucket-items{display:flex;flex-wrap:wrap;gap:.35em}
+
+/* prešmyčky */
+.an-slots{display:flex;justify-content:center;gap:.35em;flex-wrap:wrap}
+.an-slot{font:800 1.4em var(--font-display);width:1.7em;height:1.9em;border:0;border-bottom:4px solid var(--tc);background:color-mix(in srgb,var(--tc) 9%,var(--surface));border-radius:.3em .3em 0 0;color:var(--ink);cursor:pointer;padding:0}
+.an-slots.ok .an-slot{border-color:var(--ok);background:var(--ok-bg)}
+.an-slots.bad{animation:shake .35s}
+.an-slots.bad .an-slot{border-color:var(--bad);background:var(--bad-bg)}
+.an-tiles{display:flex;justify-content:center;gap:.5em;flex-wrap:wrap;min-height:3em}
+.an-tile{font:800 1.4em var(--font-display);width:1.85em;height:1.85em;border-radius:.3em;border:2px solid var(--tc);background:var(--surface);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 color-mix(in srgb,var(--tc) 60%,transparent);padding:0}
+.an-tile:active{transform:translateY(2px);box-shadow:0 1px 0 color-mix(in srgb,var(--tc) 60%,transparent)}
+
+/* play overlay, kids mode */
+.play-overlay{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;
+  padding:env(safe-area-inset-top,0px) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.play-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-block:12px;max-width:1100px;margin:0 auto;flex-wrap:wrap}
+.play-brand{font:800 1.05rem var(--font-display);color:var(--muted)}
+.play-tools{display:flex;gap:8px;flex-wrap:wrap}
+body.no-scroll{overflow:hidden}
+.kids{max-width:1100px;margin:0 auto}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:800;z-index:300;max-width:calc(100vw - 32px);box-shadow:var(--shadow);text-align:center}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:200;width:100%;height:100%}
+.print-area{display:none}
+.modal-back{position:fixed;inset:0;z-index:80;background:rgb(10 15 30 / .55);display:grid;place-items:center;padding:16px}
+.modal{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:580px;max-height:calc(100vh - 32px);overflow:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.modal h2{font-size:1.35rem}
+.modal a{color:var(--accent);font-weight:800}
+.gh-help summary{cursor:pointer;font-weight:800}
+.steps-mini{margin:8px 0 0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px;font-size:.93rem}
+.gh-msg{font-weight:800;min-height:1.4em}
+.gh-msg.good{color:var(--ok)}
+.gh-msg.bad{color:var(--bad)}
+@media (max-width:520px){.match-cols{gap:.8em}.tf-row .ans{font-size:1.1em}}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* print worksheets */
+@media print{
+  html:root:not(#_){--bg:#fff;--surface:#fff;--surface-2:#fff;--ink:#000;--muted:#333;--line:#888;--secret:#eee;color-scheme:light}
+  @page{margin:14mm}
+  body{background:#fff;color:#000;padding:0;font-size:12pt}
+  body.printing>*:not(.print-area){display:none!important}
+  .print-area{display:block}
+  .print-area .speak,.print-area .p-actions,.print-area .p-status,.print-area .sort-arrows,.print-area .p-hint,.print-area .icon-btn{display:none!important}
+  .print-area *{box-shadow:none!important;animation:none!important}
+  .pr-title{font-size:22pt}
+  .pr-instr{margin-top:4pt;font-size:13pt}
+  .pr-name{margin:8pt 0 16pt;font-size:12pt}
+  .pr-body{font-size:13pt;display:flex;flex-direction:column;gap:12pt}
+  .pr-q{break-inside:avoid;display:flex;flex-direction:column;gap:5pt;padding-bottom:8pt;border-bottom:1px solid #ccc}
+  .pr-q-head{display:flex;gap:8pt;align-items:center;font-weight:800}
+  .pr-q-head .ct-emoji{font-size:26pt}
+  .pr-q-head .ct-img{height:48pt}
+  .pr-opts{display:flex;flex-wrap:wrap;gap:6pt 22pt;padding-left:18pt}
+  .pr-opts span{display:inline-flex;align-items:center;gap:6pt}
+  .pr-opts .ct-emoji{font-size:22pt}
+  .pr-opts .ct-img{height:40pt}
+  .pr-box{display:inline-block;width:14pt;height:14pt;border:1.5px solid #000;border-radius:50%}
+  .pr-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+  .pr-card{aspect-ratio:1;border:1.5px dashed #666;display:grid;place-items:center;padding:6pt;text-align:center;font-weight:800;font-size:15pt}
+  .pr-card .ct-emoji{font-size:40pt}
+  .pr-card .ct-img{max-height:90%}
+  .pr-letters{letter-spacing:.5em;font-size:18pt;font-weight:800}
+  .pr-line{display:flex;gap:4pt}
+  .pr-line i{display:inline-block;width:22pt;height:26pt;border-bottom:2px solid #000}
+  .player{border:0;padding:0}
+  .p-head{display:none}
+  .tj-cell,.ws-cell{border-color:#000}
+  .pex-grid,.pool,.bucket{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<script id="preset" type="application/json">null</script>
+<div id="app"></div>
+<script id="app-js">
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+var PRESET=null;
+try{ PRESET=JSON.parse(document.getElementById('preset').textContent||'null'); }catch(e){ PRESET=null; }
+var $app=document.getElementById('app');
+
+function h(tag,attrs){
+  var el=document.createElement(tag);
+  if(attrs){ for(var k in attrs){ var v=attrs[k]; if(v==null||v===false) continue;
+    if(k==='class') el.className=v;
+    else if(k==='style'&&typeof v==='object'){ for(var s in v){ if(s.indexOf('--')===0) el.style.setProperty(s,v[s]); else el.style[s]=v[s]; } }
+    else if(k.slice(0,2)==='on'&&typeof v==='function') el.addEventListener(k.slice(2),v);
+    else if(k==='value') el.value=v;
+    else if(k in el && typeof v!=='string') el[k]=v;
+    else el.setAttribute(k,v===true?'':v);
+  } }
+  var kids=[].slice.call(arguments,2);
+  (function add(list){ list.forEach(function(c){ if(c==null||c===false) return; if(Array.isArray(c)) add(c); else el.append(c instanceof Node?c:String(c)); }); })(kids);
+  return el;
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function cleanWord(s){ return String(s||'').normalize('NFC').toLocaleUpperCase('sk').replace(/\s+/g,''); }
+function norm(s){ return String(s||'').normalize('NFC').trim().toLocaleLowerCase('sk').replace(/\s+/g,' '); }
+function plural(n,one,few,many){ return n+' '+(n===1?one:(n>=2&&n<=4?few:many)); }
+function slug(s){ return (String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50))||'uloha'; }
+function fmtDate(t){ try{ return new Date(t).toLocaleDateString('sk-SK',{day:'numeric',month:'numeric',year:'numeric'}); }catch(e){ return ''; } }
+function isImg(v){ return typeof v==='string'&&v.indexOf('data:image')===0; }
+function isEmoji(v){ return !!v && !isImg(v) && /\p{Extended_Pictographic}|\p{Regional_Indicator}|⃣/u.test(v) && !/\p{L}/u.test(v); }
+function content(v,cls){ cls=cls||''; if(!v) return h('span',{class:'ct ct-empty '+cls});
+  if(isImg(v)) return h('img',{class:'ct ct-img '+cls,src:v,alt:''});
+  return h('span',{class:'ct '+(isEmoji(v)?'ct-emoji ':'ct-word ')+cls},v); }
+function shake(el){ el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+var MATCH_COLORS=['#2D6BE4','#E2673A','#8E5BD6','#13A3A0','#D9468F','#3E9B3A','#C28A00','#E04848','#1A8FD8','#5B6CF0'];
+var EMOJI='🐶 🐱 🐭 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🐔 🐓 🐣 🐧 🐦 🦆 🦉 🐴 🦄 🐝 🐛 🦋 🐌 🐞 🐜 🐢 🐍 🐟 🐬 🐳 🦀 🐘 🦒 🦓 🐑 🐐 🦔 🐿️ 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🍒 🍑 🥝 🍅 🥕 🌽 🥔 🥒 🥦 🧅 🍄 🥜 🍞 🧀 🥚 🥛 🍯 ☀️ 🌙 ⭐ ☁️ 🌧️ ⛈️ ❄️ ⛄ 🌈 🌸 🌻 🌷 🌳 🌲 🍂 🍁 🌱 🌰 🌊 🔥 🏠 🏫 🏰 ⛪ 🚗 🚌 🚒 🚑 🚲 🚂 ✈️ 🚀 ⛵ ⚽ 🎈 🎁 🧸 🪁 📚 ✏️ 🖍️ ✂️ 🎨 🎵 🥁 🎺 🎄 🎃 🐰 🥚 👕 👖 🧦 🧤 🧣 👒 👟 ☂️ 👀 👂 👃 👄 ✋ 🦶 🦷 ❤️ 💛 💚 💙 💜 🧡 🤍 🖤 🟥 🟧 🟨 🟩 🟦 🟪 ⚪ 🔺 🔷 ⬛ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟 ➕ ➖ ✔️ ❌ 😀 😢 😠 😮 😴'.split(' ');
+EMOJI=EMOJI.filter(function(e,i){ return EMOJI.indexOf(e)===i; });
+
+/* ---------- storage ---------- */
+var LS_KEY='hravadielna.v1', LS_MUTE='hravadielna.mute';
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } }
+var library=[];
+function persist(){ return lsSet(LS_KEY,JSON.stringify(library)); }
+
+/* ---------- sound, speech, confetti, toast ---------- */
+var Sound={ ctx:null, muted:lsGet(LS_MUTE)==='1',
+  play:function(kind){ if(this.muted) return; try{
+    if(!this.ctx){ var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; this.ctx=new AC(); }
+    var c=this.ctx; if(c.state==='suspended') c.resume(); var now=c.currentTime;
+    var seq= kind==='ok'?[[660,0,.12],[880,.1,.2]] : kind==='bad'?[[230,0,.16,'triangle',.22],[170,.12,.22,'triangle',.22]] :
+      kind==='win'?[[523,0,.16],[659,.13,.16],[784,.26,.16],[1047,.39,.4]] : [[740,0,.06,'sine',.08]];
+    seq.forEach(function(n){ var o=c.createOscillator(), g=c.createGain(); o.type=n[3]||'sine'; o.frequency.value=n[0];
+      g.gain.setValueAtTime(0.0001,now+n[1]); g.gain.exponentialRampToValueAtTime(n[4]||.2,now+n[1]+.02); g.gain.exponentialRampToValueAtTime(0.0001,now+n[1]+n[2]);
+      o.connect(g); g.connect(c.destination); o.start(now+n[1]); o.stop(now+n[1]+n[2]+.05); });
+  }catch(e){} } };
+var canSpeak=('speechSynthesis' in window)&&typeof SpeechSynthesisUtterance!=='undefined';
+function speak(text){ if(!canSpeak||!text) return; try{ var s=window.speechSynthesis; s.cancel(); var u=new SpeechSynthesisUtterance(text);
+  u.lang='sk-SK'; u.rate=.9; var vs=s.getVoices(); var v=vs.find(function(x){return /^sk/i.test(x.lang);})||vs.find(function(x){return /^cs/i.test(x.lang);}); if(v) u.voice=v; s.speak(u); }catch(e){} }
+function speakBtn(t,small){ if(!canSpeak) return null; var txt=typeof t==='function'?null:t; if(txt!==null&&!txt) return null;
+  return h('button',{type:'button',class:'speak'+(small?' sm':''),title:'Prečítať nahlas','aria-label':'Prečítať nahlas',onclick:function(){ speak(typeof t==='function'?t():t); }},'🔊'); }
+function confetti(){ try{ if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches) return; }catch(e){}
+  var cv=h('canvas',{class:'confetti'}); document.body.append(cv); var ctx=cv.getContext('2d'); if(!ctx){cv.remove();return;}
+  var W=cv.width=innerWidth, H=cv.height=innerHeight, t=0;
+  var ps=Array.from({length:130},function(){ return {x:Math.random()*W,y:-20-Math.random()*H*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6.3,vr:(Math.random()-.5)*.25,s:7+Math.random()*7,c:MATCH_COLORS[Math.random()*MATCH_COLORS.length|0]}; });
+  (function f(){ ctx.clearRect(0,0,W,H); ps.forEach(function(p){ p.x+=p.vx; p.y+=p.vy; p.vy+=.035; p.r+=p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); ctx.restore(); });
+    if(++t<210) requestAnimationFrame(f); else cv.remove(); })(); }
+var toastTm;
+function toast(msg){ var old=document.querySelector('.toast'); if(old) old.remove(); var t=h('div',{class:'toast',role:'status'},msg); document.body.append(t); clearTimeout(toastTm); toastTm=setTimeout(function(){ t.remove(); },3200); }
+
+/* ---------- files ---------- */
+function saveFile(name,data,mime){
+  if(window.claude&&typeof window.claude.use==='function'){
+    return window.claude.use('downloads').then(function(d){
+      if(!d){ toast('Ukladanie súborov tu nie je dostupné. Stiahnite si aplikáciu do počítača.'); return; }
+      return d.save({filename:name,data:data}).then(function(){ toast('Súbor „'+name+'“ je uložený.'); },function(e){
+        if(e&&e.code==='declined') return; toast('Súbor sa nepodarilo uložiť.'); });
+    },function(){ toast('Ukladanie súborov tu nie je dostupné.'); });
+  }
+  try{ var blob=new Blob([data],{type:mime||'application/octet-stream'}); var url=URL.createObjectURL(blob);
+    var a=h('a',{href:url,download:name}); document.body.append(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); },5000);
+    toast('Súbor „'+name+'“ sa sťahuje.'); }catch(e){ toast('Súbor sa nepodarilo uložiť.'); }
+  return Promise.resolve();
+}
+var FONT_LINK='<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@500;700;800;900&display=swap">';
+function buildHTML(preset,title){
+  var css=document.getElementById('app-css').textContent;
+  var js=document.getElementById('app-js').textContent;
+  var json=JSON.stringify(preset).replace(/</g,'\\u003c');
+  var S='script';
+  return '<!DOCTYPE html>\n<html lang="sk">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n<title>'+esc(title)+'</title>\n'+FONT_LINK+
+    '\n<style id="app-css">'+css+'</style>\n</head>\n<body>\n<'+S+' id="preset" type="application/json">'+json+'</'+S+'>\n<div id="app"></div>\n<'+S+' id="app-js">'+js+'</'+S+'>\n</body>\n</html>\n';
+}
+function cleanCopy(a){ var c=JSON.parse(JSON.stringify(a)); delete c.ghSha; delete c.ghDirty; delete c.seed; return c; }
+function exportKids(a){ return saveFile(slug(a.title)+'.html',buildHTML({activity:cleanCopy(a)},a.title||'Úloha'),'text/html'); }
+function exportJson(list,name){ return saveFile(name,JSON.stringify({app:'hrava-dielna',version:1,activities:list.map(cleanCopy)},null,1),'application/json'); }
+function exportApp(){ return saveFile('hrava-dielna.html',buildHTML(null,'Hravá dielňa'),'text/html'); }
+function resizeImage(file,max){ max=max||400; return new Promise(function(res,rej){ var fr=new FileReader(); fr.onerror=rej; fr.onload=function(){ var img=new Image(); img.onerror=rej;
+  img.onload=function(){ var s=Math.min(1,max/Math.max(img.width,img.height)); var c=document.createElement('canvas'); c.width=Math.max(1,Math.round(img.width*s)); c.height=Math.max(1,Math.round(img.height*s));
+    var x=c.getContext('2d'); x.drawImage(img,0,0,c.width,c.height); var png=/png|gif|svg|webp/.test(file.type); res(c.toDataURL(png?'image/png':'image/jpeg',.82)); };
+  img.src=fr.result; }; fr.readAsDataURL(file); }); }
+function parseImported(text){
+  var t=text.trim(), data;
+  if(t[0]!=='{'&&t[0]!=='['){ var m=t.match(/<script id="preset" type="application\/json">([\s\S]*?)<\/script>/); if(!m) throw new Error('nf'); data=JSON.parse(m[1]); }
+  else data=JSON.parse(t);
+  var list= Array.isArray(data)?data : data&&Array.isArray(data.activities)?data.activities : data&&data.activity?[data.activity] : data&&data.type?[data] : [];
+  return list.filter(function(a){ return a&&TYPES[a.type]&&a.data&&typeof a.data==='object'; });
+}
+
+/* ---------- editor building blocks ---------- */
+var onChange=function(){};
+function field(label,control,hint){ return h('div',{class:'field'},h('span',{class:'lbl'},label,hint?h('small',null,' – '+hint):null),control); }
+function textInput(obj,key,o){ o=o||{}; var el=h(o.area?'textarea':'input',{class:'inp'+(o.upper?' upper':''),placeholder:o.ph||'',rows:o.rows||null,'aria-label':o.aria||o.ph||null});
+  if(!o.area) el.type='text'; el.value=obj[key]==null?'':obj[key]; if(o.upper){ el.autocapitalize='characters'; el.spellcheck=false; }
+  el.addEventListener('input',function(){ obj[key]=o.upper?el.value.toLocaleUpperCase('sk'):el.value; if(o.after) o.after(); onChange(); }); return el; }
+function toggleField(obj,key,label,after){ var cb=h('input',{type:'checkbox'}); cb.checked=!!obj[key]; cb.onchange=function(){ obj[key]=cb.checked; if(after) after(); onChange(); };
+  return h('label',{class:'switch'},cb,h('span',null,label)); }
+function iconBtn(txt,title,fn,disabled){ return h('button',{type:'button',class:'icon-btn',title:title,'aria-label':title,disabled:!!disabled,onclick:fn},txt); }
+function selectField(obj,key,opts,after){ var s=h('select',{class:'inp'},opts.map(function(o){ return h('option',{value:String(o[0])},o[1]); }));
+  s.value=String(obj[key]); s.onchange=function(){ var v=s.value; obj[key]=typeof opts[0][0]==='number'?Number(v):(v==='true'?true:v==='false'?false:v); if(after) after(); onChange(); }; return s; }
+var pickerEl=null;
+function closePicker(){ if(pickerEl){ pickerEl.remove(); pickerEl=null; document.removeEventListener('pointerdown',outsidePicker,true); } }
+function outsidePicker(e){ if(pickerEl&&!pickerEl.contains(e.target)&&e.target!==pickerEl._anchor) closePicker(); }
+function emojiButton(cb){ var b=h('button',{type:'button',class:'btn ghost sm',title:'Vybrať obrázok-emoji','aria-label':'Vybrať emoji'},'😀');
+  b.onclick=function(){ if(pickerEl&&pickerEl._anchor===b){ closePicker(); return; } closePicker();
+    var p=h('div',{class:'emoji-pop',role:'dialog','aria-label':'Výber emoji'},EMOJI.map(function(e){ return h('button',{type:'button',class:'emo',onclick:function(){ cb(e); closePicker(); }},e); }));
+    p._anchor=b; document.body.append(p); var r=b.getBoundingClientRect(); var w=Math.min(330,innerWidth-24); p.style.width=w+'px';
+    var left=Math.max(12,Math.min(r.left,innerWidth-w-12)); p.style.left=(left+scrollX)+'px'; p.style.top=(r.bottom+scrollY+6)+'px'; pickerEl=p;
+    setTimeout(function(){ document.addEventListener('pointerdown',outsidePicker,true); }); };
+  return b; }
+function picField(obj,key,o){ o=o||{}; var ph=o.ph||'Emoji alebo slovo';
+  var thumb=h('div',{class:'thumb','aria-hidden':'true'}); var inp=h('input',{class:'inp',type:'text','aria-label':o.aria||ph});
+  var file=h('input',{type:'file',accept:'image/*',hidden:true});
+  var clr=iconBtn('✕','Vymazať obrázok',function(){ obj[key]=''; sync(); onChange(); });
+  function drawThumb(){ var v=obj[key]||''; thumb.replaceChildren(v?content(v):h('span',{class:'thumb-empty'},'—')); clr.hidden=!v; }
+  function sync(){ var v=obj[key]||''; inp.value=isImg(v)?'':v; inp.placeholder=isImg(v)?'Nahraný obrázok':ph; drawThumb(); }
+  inp.addEventListener('input',function(){ obj[key]=inp.value; drawThumb(); onChange(); });
+  file.onchange=function(){ var f=file.files[0]; if(!f) return; resizeImage(f).then(function(url){ obj[key]=url; sync(); onChange(); },function(){ toast('Obrázok sa nepodarilo načítať.'); }); file.value=''; };
+  var up=h('button',{type:'button',class:'btn ghost sm',title:'Nahrať obrázok z počítača',onclick:function(){ file.click(); }},'🖼️ Obrázok');
+  var emo=emojiButton(function(v){ obj[key]=v; sync(); onChange(); });
+  sync(); return h('div',{class:'pic-field'},thumb,inp,emo,up,clr,file); }
+function listEditor(o){ var wrap=h('div',{class:'list'}); var items=o.items, min=o.min||1, max=o.max||60;
+  function render(focusLast){ wrap.replaceChildren();
+    items.forEach(function(it,i){
+      var tools=h('div',{class:'row-tools'},h('span',{class:'row-num'},o.noun+' '+(i+1)),
+        iconBtn('↑','Posunúť vyššie',function(){ var t=items[i-1]; items[i-1]=items[i]; items[i]=t; render(); onChange(); },i===0),
+        iconBtn('↓','Posunúť nižšie',function(){ var t=items[i+1]; items[i+1]=items[i]; items[i]=t; render(); onChange(); },i===items.length-1),
+        iconBtn('✕','Odstrániť',function(){ items.splice(i,1); render(); onChange(); },items.length<=min));
+      wrap.append(h('div',{class:'row-card'},tools,o.row(it,i)));
+    });
+    if(items.length<max) wrap.append(h('button',{type:'button',class:'btn add',onclick:function(){ items.push(o.newItem()); render(true); onChange(); }},'+ '+o.addLabel));
+    if(focusLast){ var cards=wrap.querySelectorAll('.row-card'); var last=cards[cards.length-1]; var f=last&&last.querySelector('input[type=text],textarea'); if(f) f.focus(); }
+  }
+  render(); return wrap; }
+function answersEditor(q){ var wrap=h('div',{class:'answers'});
+  function render(){ wrap.replaceChildren();
+    q.answers.forEach(function(a,i){
+      var mark=h('button',{type:'button',class:'okmark'+(a.ok?' on':''),'aria-pressed':String(!!a.ok),title:'Označiť ako správnu odpoveď','aria-label':'Správna odpoveď'},a.ok?'✓':'');
+      mark.onclick=function(){ q.answers.forEach(function(x){ x.ok=false; }); a.ok=true; render(); onChange(); };
+      var inp=textInput(a,'t',{ph:'Odpoveď '+(i+1)+' (slovo alebo emoji)'});
+      var emo=emojiButton(function(v){ a.t=v; inp.value=v; onChange(); });
+      var del=iconBtn('✕','Odstrániť odpoveď',function(){ q.answers.splice(i,1); if(!q.answers.some(function(x){return x.ok;})&&q.answers[0]) q.answers[0].ok=true; render(); onChange(); },q.answers.length<=2);
+      wrap.append(h('div',{class:'ans-row'},mark,inp,emo,del)); });
+    if(q.answers.length<6) wrap.append(h('button',{type:'button',class:'btn ghost sm add',onclick:function(){ q.answers.push({t:'',ok:false}); render(); onChange(); }},'+ Pridať odpoveď'));
+  }
+  render(); return wrap; }
+function empty(body,msg){ body.replaceChildren(h('p',{class:'p-empty'},msg||'Zatiaľ tu nie je žiadny obsah. Doplňte ho v editore vľavo.')); }
+function progress(i,n){ var dots=[]; for(var k=0;k<n;k++) dots.push(h('span',{class:'dot'+(k<i?' done':k===i?' now':'')}));
+  return h('div',{class:'p-prog','aria-label':'Úloha '+(i+1)+' z '+n},dots,h('span',{class:'num'},(i+1)+' / '+n)); }
+
+/* ---------- Activity types ---------- */
+var TYPES={};
+
+TYPES.quiz={ name:'Kvíz', icon:'❓', color:'#2D6BE4', age:'MŠ · ZŠ', desc:'Otázky s výberom odpovede. Odpoveďou môže byť aj obrázok.', instr:'Vyber správnu odpoveď.',
+  count:function(d){ return plural(d.questions.length,'otázka','otázky','otázok'); },
+  sample:function(){ return {title:'Zvieratká a ich mláďatá',data:{shuffle:true,questions:[
+    {q:'Ako sa volá mláďa kravy?',pic:'🐮',answers:[{t:'teliatko',ok:true},{t:'žriebätko',ok:false},{t:'jahniatko',ok:false}]},
+    {q:'Kto ráno spieva kikirikí?',pic:'',answers:[{t:'🐓',ok:true},{t:'🐶',ok:false},{t:'🐱',ok:false},{t:'🐷',ok:false}]},
+    {q:'Ako sa volá mláďa koňa?',pic:'🐴',answers:[{t:'šteniatko',ok:false},{t:'žriebätko',ok:true},{t:'prasiatko',ok:false}]},
+    {q:'Kto nám dáva mlieko?',pic:'🥛',answers:[{t:'🐮',ok:true},{t:'🐸',ok:false},{t:'🐝',ok:false}]}]}}; },
+  editor:function(d,el){ el.append(toggleField(d,'shuffle','Zamiešať poradie otázok aj odpovedí'),
+    listEditor({items:d.questions,noun:'Otázka',addLabel:'Pridať otázku',newItem:function(){ return {q:'',pic:'',answers:[{t:'',ok:true},{t:'',ok:false},{t:'',ok:false}]}; },
+      row:function(q){ return [field('Otázka',textInput(q,'q',{ph:'Napr. Koľko nôh má pavúk?'})),field('Obrázok k otázke',picField(q,'pic'),'nepovinné'),field('Odpovede',answersEditor(q),'krúžkom ✓ označte správnu')]; }})); },
+  valid:function(d){ return d.questions.filter(function(q){ return (q.q||q.pic)&&q.answers.filter(function(a){return a.t;}).length>=2&&q.answers.some(function(a){return a.ok&&a.t;}); }); },
+  play:function(d,body,api){ var qs=this.valid(d); if(!qs.length) return empty(body); if(d.shuffle) qs=shuffle(qs.slice()); var i=0,score=0;
+    function show(){ var q=qs[i], tried=false, locked=false; var ans=q.answers.filter(function(a){return a.t;}); if(d.shuffle) ans=shuffle(ans.slice());
+      var pics=ans.every(function(a){ return isEmoji(a.t)||isImg(a.t); }); var grid=h('div',{class:'ans-grid'+(pics?' pics':'')});
+      ans.forEach(function(a){ var b=h('button',{type:'button',class:'ans'},content(a.t)); b.onclick=function(){ if(locked) return;
+        if(a.ok){ locked=true; b.classList.add('ok'); api.sfx('ok'); if(!tried) score++; setTimeout(next,950); }
+        else { tried=true; b.classList.add('bad'); b.disabled=true; api.sfx('bad'); } }; grid.append(b); });
+      var say=function(){ return q.q+'. '+ans.filter(function(a){ return !isEmoji(a.t)&&!isImg(a.t); }).map(function(a){ return a.t; }).join(', '); };
+      body.replaceChildren(progress(i,qs.length),h('div',{class:'q-card'},q.pic?content(q.pic,'q-pic'):null,q.q?h('div',{class:'q-line'},h('p',{class:'q-text'},q.q),speakBtn(say)):null),grid); }
+    function next(){ i++; if(i<qs.length) show(); else api.finish(score,qs.length); }
+    show(); },
+  print:function(d,el){ this.valid(d).forEach(function(q,i){ el.append(h('div',{class:'pr-q'},h('div',{class:'pr-q-head'},(i+1)+'.',q.pic?content(q.pic):null,h('span',null,q.q)),
+    h('div',{class:'pr-opts'},q.answers.filter(function(a){return a.t;}).map(function(a){ return h('span',null,h('i',{class:'pr-box'}),content(a.t)); })))); }); } };
+
+TYPES.tajnicka={ name:'Tajnička', icon:'🔠', color:'#E2673A', age:'ZŠ', desc:'Doplňovačka, v ktorej sa v žltom stĺpci ukryje tajné slovo.', instr:'Vyrieš hádanky a vpíš slová. V žltom stĺpci sa ukryje tajnička.',
+  count:function(d){ return 'tajnička '+(cleanWord(d.secret)||'–'); },
+  sample:function(){ return {title:'Leto',data:{secret:'LETO',rows:[
+    {answer:'SLNKO',clue:'Svieti na oblohe a hreje nás.',pic:'☀️'},{answer:'MEDVEĎ',clue:'Hnedé zviera, ktoré v zime spí v brlohu.',pic:'🐻'},
+    {answer:'KVETINA',clue:'Rastie na lúke a má farebné lupene.',pic:'🌸'},{answer:'JABLKO',clue:'Rastie na strome, býva červené aj zelené.',pic:'🍎'}]}}; },
+  layout:function(d){ var secret=cleanWord(d.secret), rows=[];
+    for(var i=0;i<secret.length;i++){ var r=d.rows[i]||{}; var ans=cleanWord(r.answer); if(!ans) ans=secret[i]; var pos=ans.indexOf(secret[i]);
+      rows.push({ans:ans,pos:pos<0?0:pos,clue:r.clue||'',pic:r.pic||''}); }
+    var maxPos=0; rows.forEach(function(r){ maxPos=Math.max(maxPos,r.pos); }); var width=1;
+    rows.forEach(function(r){ r.start=maxPos-r.pos; width=Math.max(width,r.start+r.ans.length); });
+    return {secret:secret,rows:rows,maxPos:maxPos,width:width}; },
+  editor:function(d,el){ var box=h('div',{class:'list'});
+    function renderRows(){ var s=cleanWord(d.secret); while(d.rows.length<s.length) d.rows.push({answer:'',clue:'',pic:''}); box.replaceChildren();
+      if(!s){ box.append(h('p',{class:'hint'},'Najprv napíšte tajničku – slovo, ktoré sa má v úlohe ukryť. Každé jej písmeno bude jeden riadok.')); return; }
+      Array.from(s).forEach(function(letter,i){ var r=d.rows[i]; var chip=h('span',{class:'chip'});
+        function upd(){ var a=cleanWord(r.answer); var ok=a.indexOf(letter)>=0; chip.className='chip '+(a?(ok?'chip-ok':'chip-bad'):''); chip.textContent=!a?'musí obsahovať '+letter:ok?'✓ obsahuje '+letter:'⚠ chýba písmeno '+letter; }
+        upd();
+        box.append(h('div',{class:'row-card'},h('div',{class:'row-head'},h('span',{class:'letter-badge'},letter),h('strong',null,'Riadok '+(i+1)),chip),
+          field('Slovo – odpoveď',textInput(r,'answer',{ph:'Slovo s písmenom '+letter,upper:true,after:upd})),
+          field('Hádanka / nápoveda',textInput(r,'clue',{ph:'Napr. Svieti na oblohe.'})),
+          field('Obrázok',picField(r,'pic'),'nepovinné'))); }); }
+    el.append(field('Tajnička (ukryté slovo)',textInput(d,'secret',{upper:true,ph:'Napr. LETO',after:renderRows}),'každé písmeno = jeden riadok'),box); renderRows(); },
+  play:function(d,body,api){ var L=this.layout(d); if(!L.secret) return empty(body,'Doplňte tajničku a slová v editore.');
+    var grid=h('div',{class:'tj-grid'}); grid.style.gridTemplateColumns='1.8em repeat('+L.width+', 2.1em)'; var cells={}; var wrongRows={};
+    L.rows.forEach(function(r,ri){ grid.append(h('div',{class:'tj-num'},(ri+1)+'.'));
+      for(var c=0;c<L.width;c++){ var k=c-r.start;
+        if(k>=0&&k<r.ans.length){ var inp=h('input',{class:'tj-cell'+(c===L.maxPos?' secret':''),maxlength:'2',autocomplete:'off',autocapitalize:'characters',spellcheck:'false',inputmode:'text','aria-label':'Riadok '+(ri+1)+', písmeno '+(k+1)});
+          inp.dataset.r=ri; inp.dataset.c=c; cells[ri+':'+c]=inp; grid.append(inp); }
+        else grid.append(h('div')); } });
+    function focus(r,c){ var e=cells[r+':'+c]; if(e){ e.focus(); try{ e.select(); }catch(x){} return true; } return false; }
+    grid.addEventListener('input',function(e){ var t=e.target; if(!t.classList.contains('tj-cell')) return; var v=t.value.toLocaleUpperCase('sk').replace(/[^\p{L}]/gu,''); t.value=v.slice(-1); t.classList.remove('ok','bad'); if(t.value) focus(+t.dataset.r,+t.dataset.c+1); });
+    grid.addEventListener('keydown',function(e){ var t=e.target; if(!t.classList.contains('tj-cell')) return; var r=+t.dataset.r,c=+t.dataset.c;
+      if(e.key==='Backspace'&&!t.value){ e.preventDefault(); var p=cells[r+':'+(c-1)]; if(p){ p.value=''; p.focus(); } }
+      else if(e.key==='ArrowLeft'){ e.preventDefault(); focus(r,c-1); } else if(e.key==='ArrowRight'){ e.preventDefault(); focus(r,c+1); }
+      else if(e.key==='ArrowUp'){ e.preventDefault(); focus(r-1,c); } else if(e.key==='ArrowDown'){ e.preventDefault(); focus(r+1,c); }
+      else if(e.key==='Enter'){ e.preventDefault(); var nr=L.rows[r+1]; if(nr) focus(r+1,nr.start); } });
+    var clues=h('ol',{class:'tj-clues'},L.rows.map(function(r,ri){ return h('li',null,h('span',{class:'tj-cn'},(ri+1)+'.'),r.pic?content(r.pic,'tj-pic'):null,h('span',{class:'tj-ct'},r.clue||'(bez nápovedy)'),h('span',{class:'tj-len'},plural(r.ans.length,'písmeno','písmená','písmen')),speakBtn(r.clue,true)); }));
+    var status=h('p',{class:'p-status',role:'status'});
+    function check(){ var all=true; L.rows.forEach(function(r,ri){ var rowOk=true, filled=true;
+        for(var k=0;k<r.ans.length;k++){ var inp=cells[ri+':'+(r.start+k)]; var ok=inp.value===r.ans[k]; if(!inp.value) filled=false; inp.classList.toggle('ok',ok); inp.classList.toggle('bad',!ok&&!!inp.value); if(!ok) rowOk=false; }
+        if(!rowOk){ all=false; if(filled) wrongRows[ri]=1; } });
+      if(all){ api.sfx('ok'); status.className='p-status good'; status.textContent='Tajnička je: '+L.secret+' 🎉'; setTimeout(function(){ api.finish(L.rows.length-Object.keys(wrongRows).length,L.rows.length,{extra:'Tajnička: '+L.secret,label:'Správne riadky na prvý pokus'}); },1300); }
+      else { api.sfx('bad'); status.className='p-status badtxt'; status.textContent='Ešte to nie je celé správne. Oprav červené políčka a doplň prázdne.'; } }
+    body.append(h('div',{class:'tj-wrap'},grid),clues,h('div',{class:'p-actions'},h('button',{type:'button',class:'btn primary big',onclick:check},'✔ Skontrolovať')),status); } };
+
+TYPES.pexeso={ name:'Pexeso', icon:'🃏', color:'#8E5BD6', age:'MŠ · ZŠ', desc:'Pamäťová hra. Dvojica môže byť rovnaký obrázok alebo obrázok a slovo.', instr:'Otáčaj kartičky a nájdi všetky dvojice.',
+  count:function(d){ return plural(d.pairs.length,'dvojica','dvojice','dvojíc'); },
+  sample:function(){ return {title:'Ovocie – obrázok a slovo',data:{pairs:[{a:'🍎',b:'jablko'},{a:'🍌',b:'banán'},{a:'🍇',b:'hrozno'},{a:'🍓',b:'jahoda'},{a:'🍐',b:'hruška'},{a:'🍒',b:'čerešne'}]}}; },
+  editor:function(d,el){ el.append(h('p',{class:'hint'},'Ak kartičku B necháte prázdnu, dvojicu budú tvoriť dva rovnaké obrázky – vhodné pre najmenších.'),
+    listEditor({items:d.pairs,noun:'Dvojica',addLabel:'Pridať dvojicu',min:2,max:18,newItem:function(){ return {a:'',b:''}; },
+      row:function(p){ return h('div',{class:'two'},field('Kartička A',picField(p,'a')),field('Kartička B',picField(p,'b',{ph:'Prázdne = rovnaká ako A'}))); }})); },
+  play:function(d,body,api){ var pairs=d.pairs.filter(function(p){ return p.a; }); if(pairs.length<2) return empty(body,'Pridajte aspoň 2 dvojice kartičiek.');
+    var cards=shuffle(pairs.reduce(function(acc,p,i){ acc.push({k:i,v:p.a},{k:i,v:p.b||p.a}); return acc; },[]));
+    var open=[], matched=0, tries=0, busy=false; var info=h('p',{class:'p-status'},'Pokusy: 0'); var grid=h('div',{class:'pex-grid'});
+    cards.forEach(function(cd){ var b=h('button',{type:'button',class:'pex','aria-label':'Kartička'},h('span',{class:'pex-inner'},h('span',{class:'pex-back'},'?'),h('span',{class:'pex-front'},content(cd.v))));
+      b.onclick=function(){ if(busy||b.classList.contains('open')||b.classList.contains('done')) return; b.classList.add('open'); Sound.play('tick'); open.push([b,cd]);
+        if(open.length===2){ tries++; info.textContent='Pokusy: '+tries; var b1=open[0][0],c1=open[0][1],b2=open[1][0],c2=open[1][1]; open=[];
+          if(c1.k===c2.k){ matched++; setTimeout(function(){ b1.classList.add('done'); b2.classList.add('done'); api.sfx('ok'); },350);
+            if(matched===pairs.length) setTimeout(function(){ api.finish(Math.min(pairs.length,Math.round(pairs.length*pairs.length/tries)),pairs.length,{label:false,extra:'Všetky dvojice nájdené na '+plural(tries,'pokus','pokusy','pokusov')+'.'}); },1200); }
+          else { busy=true; setTimeout(function(){ b1.classList.remove('open'); b2.classList.remove('open'); busy=false; },1000); } } };
+      grid.append(b); });
+    body.append(grid,info); },
+  print:function(d,el){ var g=h('div',{class:'pr-cards'}); d.pairs.filter(function(p){return p.a;}).forEach(function(p){ g.append(h('div',{class:'pr-card'},content(p.a)),h('div',{class:'pr-card'},content(p.b||p.a))); });
+    el.append(h('p',null,'✂ Vystrihni kartičky a zahraj sa pexeso.'),g); } };
+
+TYPES.sparuj={ name:'Priraď dvojice', icon:'🔗', color:'#13A3A0', age:'MŠ · ZŠ', desc:'Spájanie, čo k sebe patrí: obrázok a slovo, číslo a počet, otázka a odpoveď.', instr:'Ťukni na kartičku vľavo a potom na tú, ktorá k nej patrí vpravo.',
+  count:function(d){ return plural(d.pairs.length,'dvojica','dvojice','dvojíc'); },
+  sample:function(){ return {title:'Koľko ich je?',data:{pairs:[{a:'1',b:'🐞'},{a:'2',b:'🎈🎈'},{a:'3',b:'🍎🍎🍎'},{a:'4',b:'🐟🐟🐟🐟'},{a:'5',b:'⭐⭐⭐⭐⭐'}]}}; },
+  editor:function(d,el){ el.append(listEditor({items:d.pairs,noun:'Dvojica',addLabel:'Pridať dvojicu',min:2,max:12,newItem:function(){ return {a:'',b:''}; },
+    row:function(p){ return h('div',{class:'two'},field('Ľavá strana',picField(p,'a')),field('Pravá strana',picField(p,'b'))); }})); },
+  play:function(d,body,api){ var pairs=d.pairs.filter(function(p){ return p.a&&p.b; }); if(pairs.length<2) return empty(body,'Pridajte aspoň 2 úplné dvojice.');
+    var Lc=h('div',{class:'match-col'}), Rc=h('div',{class:'match-col'}); var sel=null, done=0, wrong=0;
+    function mk(it,side){ var b=h('button',{type:'button',class:'match'},content(it.v));
+      b.onclick=function(){ if(b.classList.contains('done')) return;
+        if(sel&&sel.side===side){ sel.b.classList.remove('sel'); var same=sel.b===b; sel=null; if(same) return; }
+        if(!sel){ sel={b:b,it:it,side:side}; b.classList.add('sel'); Sound.play('tick'); return; }
+        if(sel.it.i===it.i){ var col=MATCH_COLORS[done%MATCH_COLORS.length]; done++; var n=done;
+          [sel.b,b].forEach(function(x){ x.classList.remove('sel'); x.classList.add('done'); x.style.setProperty('--mc',col); x.append(h('span',{class:'mbadge'},n)); });
+          sel=null; api.sfx('ok'); if(done===pairs.length) setTimeout(function(){ api.finish(Math.max(0,pairs.length-wrong),pairs.length,{label:'Spojené bez chyby'}); },800); }
+        else { wrong++; api.sfx('bad'); shake(b); shake(sel.b); sel.b.classList.remove('sel'); sel=null; } };
+      return b; }
+    shuffle(pairs.map(function(p,i){ return {i:i,v:p.a}; })).forEach(function(it){ Lc.append(mk(it,'L')); });
+    shuffle(pairs.map(function(p,i){ return {i:i,v:p.b}; })).forEach(function(it){ Rc.append(mk(it,'R')); });
+    body.append(h('div',{class:'match-cols'},Lc,Rc)); } };
+
+function parseGaps(text){ var parts=[], re=/\*([^*\n]+)\*/g, last=0, m;
+  while((m=re.exec(text))){ if(m.index>last) parts.push({t:text.slice(last,m.index)}); parts.push({gap:m[1].split('|').map(function(s){return s.trim();}).filter(Boolean)}); last=re.lastIndex; }
+  if(last<text.length) parts.push({t:text.slice(last)}); return parts.filter(function(p){ return p.t!=null||p.gap.length; }); }
+TYPES.doplnovacka={ name:'Doplňovačka', icon:'✏️', color:'#D9468F', age:'ZŠ', desc:'Text s vynechanými slovami alebo písmenami, ktoré deti doplnia.', instr:'Doplň chýbajúce písmená alebo slová.',
+  count:function(d){ return plural(parseGaps(d.text||'').filter(function(p){return p.gap;}).length,'medzera','medzery','medzier'); },
+  sample:function(){ return {title:'Vybrané slová po B',data:{bank:true,extra:'i, í',text:'Na farme žije veľký b*ý*k a hnedá kob*y*la.\nV našom b*y*te máme nový náb*y*tok.\nBabka zbiera liečivé b*y*linky.'}}; },
+  editor:function(d,el){ var ta=textInput(d,'text',{area:true,rows:7,ph:'Mačka robí *mňau*.',after:function(){ upd(); }});
+    var cnt=h('span',{class:'chip'}); function upd(){ var n=parseGaps(d.text||'').filter(function(p){return p.gap;}).length; cnt.textContent=plural(n,'medzera','medzery','medzier'); cnt.className='chip '+(n?'chip-ok':'chip-bad'); }
+    var mkBtn=h('button',{type:'button',class:'btn sm',onclick:function(){ var s=ta.selectionStart,e=ta.selectionEnd; if(s===e){ toast('Najprv v texte myšou označte slovo alebo písmeno.'); return; }
+      var v=ta.value; ta.value=v.slice(0,s)+'*'+v.slice(s,e)+'*'+v.slice(e); d.text=ta.value; upd(); onChange(); ta.focus(); ta.setSelectionRange(e+2,e+2); }},'✱ Z označeného urobiť medzeru');
+    upd();
+    el.append(h('p',{class:'hint'},'Čo majú deti doplniť, dajte medzi hviezdičky: ',h('code',null,'Mačka robí *mňau*.'),' Viac správnych možností oddeľte zvislou čiarou: ',h('code',null,'*pes|psík*'),'. Alebo text označte myšou a stlačte tlačidlo.'),
+      field('Text úlohy',ta),h('div',{class:'row-tools'},mkBtn,cnt),
+      toggleField(d,'bank','Ponúknuť slová na výber (deti ťukajú, nemusia písať)'),
+      field('Slová navyše na zmätenie',textInput(d,'extra',{ph:'napr. i, í'}),'oddeľte čiarkou, len pri výbere slov')); },
+  play:function(d,body,api){ var parts=parseGaps(d.text||''); var gaps=parts.filter(function(p){return p.gap;}); if(!gaps.length) return empty(body,'Označte v texte aspoň jedno slovo hviezdičkami, napr. *slovo*.');
+    var para=h('div',{class:'gap-text'}), slots=[], wrongSet={}, status=h('p',{class:'p-status',role:'status'});
+    if(d.bank){ var selected=null;
+      function select(s){ slots.forEach(function(x){ x.el.classList.toggle('sel',x===s); }); selected=s; }
+      parts.forEach(function(p){ if(p.t!=null){ para.append(p.t); return; } var el=h('button',{type:'button',class:'gap-slot','aria-label':'Prázdne okienko'},' '); var s={el:el,ans:p.gap,val:'',chip:null};
+        el.onclick=function(){ if(s.val){ s.chip.hidden=false; s.val=''; s.chip=null; el.textContent=' '; el.classList.remove('ok','bad'); } select(s); }; slots.push(s); para.append(el); });
+      var words=gaps.map(function(g){ return g.gap[0]; }).concat(String(d.extra||'').split(',').map(function(s){return s.trim();}).filter(Boolean)); shuffle(words);
+      var bank=h('div',{class:'bank'},words.map(function(w){ var c=h('button',{type:'button',class:'chip-word'},w);
+        c.onclick=function(){ var s=selected||slots.find(function(x){return !x.val;}); if(!s) return; if(s.val&&s.chip) s.chip.hidden=false;
+          s.val=w; s.chip=c; c.hidden=true; s.el.textContent=w; s.el.classList.remove('ok','bad'); Sound.play('tick'); select(slots.find(function(x){return !x.val;})||null); }; return c; }));
+      select(slots[0]); body.append(para,h('p',{class:'p-hint'},'Ťukni na slovo dole – doplní sa do označeného okienka. Ťuknutím na okienko slovo vrátiš.'),bank);
+    } else { parts.forEach(function(p){ if(p.t!=null){ para.append(p.t); return; } var w=Math.max.apply(null,p.gap.map(function(a){return a.length;}));
+        var el=h('input',{class:'gap-inp',autocomplete:'off',spellcheck:'false','aria-label':'Doplň'}); el.style.width=(Math.max(2,w)+1.6)+'ch'; el.oninput=function(){ el.classList.remove('ok','bad'); };
+        slots.push({el:el,ans:p.gap,get val(){ return el.value; }}); para.append(el); }); body.append(para); }
+    function check(){ var all=true; slots.forEach(function(s,i){ var v=norm(s.val); var ok=!!v&&s.ans.some(function(a){ return norm(a)===v; });
+        s.el.classList.toggle('ok',ok); s.el.classList.toggle('bad',!!v&&!ok); if(!ok){ all=false; if(v) wrongSet[i]=1; } });
+      if(all){ api.sfx('ok'); status.className='p-status good'; status.textContent='Všetko správne! 🎉'; setTimeout(function(){ api.finish(slots.length-Object.keys(wrongSet).length,slots.length); },1000); }
+      else { api.sfx('bad'); status.className='p-status badtxt'; status.textContent='Niečo ešte nesedí. Oprav červené a doplň prázdne.'; } }
+    body.append(h('div',{class:'p-actions'},h('button',{type:'button',class:'btn primary big',onclick:check},'✔ Skontrolovať')),status); },
+  print:function(d,el){ var parts=parseGaps(d.text||''); var para=h('div',{class:'gap-text'}); var words=[];
+    parts.forEach(function(p){ if(p.t!=null) para.append(p.t); else { words.push(p.gap[0]); para.append(h('span',null,'_'.repeat(Math.max(3,p.gap[0].length+2)))); } });
+    el.append(para); if(d.bank){ words=words.concat(String(d.extra||'').split(',').map(function(s){return s.trim();}).filter(Boolean)); el.append(h('p',null,'Slová na výber: ',h('strong',null,shuffle(words).join(',  ')))); } } };
+
+function rng(seed){ var s=(seed>>>0)||1; return function(){ s^=s<<13; s>>>=0; s^=s>>>17; s^=s<<5; s>>>=0; return s/4294967296; }; }
+function buildGrid(words,size,hard,seed){ var R=rng(seed); var longest=words.reduce(function(m,w){ return Math.max(m,w.length); },0); size=Math.max(size,longest);
+  var g=[]; for(var r=0;r<size;r++){ g.push(new Array(size).fill('')); }
+  var dirs=hard?[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]]:[[0,1],[1,0]]; var placed=[], failed=[];
+  words.slice().sort(function(a,b){ return b.length-a.length; }).forEach(function(w){ var ok=false;
+    for(var t=0;t<600&&!ok;t++){ var dd=dirs[Math.floor(R()*dirs.length)], r0=Math.floor(R()*size), c0=Math.floor(R()*size);
+      var er=r0+dd[0]*(w.length-1), ec=c0+dd[1]*(w.length-1); if(er<0||er>=size||ec<0||ec>=size) continue; var fit=true;
+      for(var k=0;k<w.length;k++){ var cell=g[r0+dd[0]*k][c0+dd[1]*k]; if(cell&&cell!==w[k]){ fit=false; break; } }
+      if(!fit) continue; for(k=0;k<w.length;k++) g[r0+dd[0]*k][c0+dd[1]*k]=w[k]; placed.push({w:w}); ok=true; }
+    if(!ok) failed.push(w); });
+  var FILL='AÁBCČDEÉFGHIÍJKLMNOPRSŠTUÚVYZŽ';
+  for(r=0;r<size;r++) for(var c=0;c<size;c++) if(!g[r][c]) g[r][c]=FILL[Math.floor(R()*FILL.length)];
+  return {g:g,size:size,placed:placed,failed:failed}; }
+function parseWords(d){ return (d.words||[]).map(cleanWord).filter(function(w,i,a){ return w.length>=2&&a.indexOf(w)===i; }); }
+TYPES.osemsmerovka={ name:'Osemsmerovka', icon:'🔍', color:'#3E9B3A', age:'ZŠ', desc:'Hľadanie slov v mriežke písmen. Ľahká verzia len zľava doprava a zhora dole.', instr:'Nájdi v mriežke všetky slová. Ťukni na prvé a potom na posledné písmeno slova.',
+  count:function(d){ return plural(parseWords(d).length,'slovo','slová','slov'); },
+  sample:function(){ return {title:'Farby',data:{words:['ČERVENÁ','MODRÁ','ŽLTÁ','ZELENÁ','BIELA','ČIERNA','RUŽOVÁ'],size:9,hard:false,seed:20261}}; },
+  editor:function(d,el){ var ta=h('textarea',{class:'inp upper',rows:6,placeholder:'Každé slovo na nový riadok','aria-label':'Slová'}); ta.value=(d.words||[]).join('\n'); var warn=h('p',{class:'hint'});
+    function check(){ var ws=parseWords(d); var G=buildGrid(ws,d.size,d.hard,d.seed); warn.replaceChildren(); warn.className='hint';
+      if(G.failed.length){ warn.className='chip chip-bad'; warn.textContent='Nezmestili sa: '+G.failed.join(', ')+'. Zväčšite mriežku alebo skúste nové rozloženie.'; }
+      else if(ws.length){ warn.textContent='Mriežka '+G.size+' × '+G.size+', '+plural(ws.length,'slovo','slová','slov')+'.'; } }
+    ta.addEventListener('input',function(){ d.words=ta.value.split(/[\n,;]+/).map(function(s){return s.trim();}).filter(Boolean); check(); onChange(); });
+    var sizes=[]; for(var n=6;n<=15;n++) sizes.push([n,n+' × '+n]);
+    el.append(field('Slová na hľadanie',ta,'každé na nový riadok'),
+      h('div',{class:'two'},field('Veľkosť mriežky',selectField(d,'size',sizes,check)),field('Smery slov',selectField(d,'hard',[['false','Ľahká – → a ↓'],['true','Ťažká – všetkých 8 smerov']],check))),
+      h('div',{class:'row-tools'},h('button',{type:'button',class:'btn sm',onclick:function(){ d.seed=Math.floor(Math.random()*1e9); check(); onChange(); }},'🔀 Nové rozloženie písmen')),warn); check(); },
+  play:function(d,body,api){ var ws=parseWords(d); if(!ws.length) return empty(body,'Napíšte slová, ktoré sa majú v mriežke ukryť.');
+    var G=buildGrid(ws,d.size,d.hard,d.seed), n=G.size; var grid=h('div',{class:'ws-grid',style:{'--n':n}}); grid.style.gridTemplateColumns='repeat('+n+',1fr)'; var cells=[];
+    for(var r=0;r<n;r++) for(var c=0;c<n;c++){ var x=h('div',{class:'ws-cell'},G.g[r][c]); x.dataset.r=r; x.dataset.c=c; cells.push(x); grid.append(x); }
+    var list=h('ul',{class:'ws-words'},G.placed.map(function(p){ return p.li=h('li',null,p.w); }));
+    var start=null, dragging=false, found=0, wrong=0;
+    function path(a,b){ var r1=+a.dataset.r,c1=+a.dataset.c,r2=+b.dataset.r,c2=+b.dataset.c; var lr=Math.abs(r2-r1), lc=Math.abs(c2-c1);
+      if(!(lr===0||lc===0||lr===lc)) return null; var dr=Math.sign(r2-r1), dc=Math.sign(c2-c1), len=Math.max(lr,lc)+1, out=[];
+      for(var k=0;k<len;k++) out.push(cells[(r1+dr*k)*n+(c1+dc*k)]); return out; }
+    function clearSel(){ cells.forEach(function(x){ x.classList.remove('sel'); }); }
+    function preview(b){ clearSel(); if(!start) return; (path(start,b)||[start]).forEach(function(x){ x.classList.add('sel'); }); }
+    function cellAt(e){ var el=document.elementFromPoint(e.clientX,e.clientY); return el&&el.closest?el.closest('.ws-cell'):null; }
+    function attempt(a,b){ var p=path(a,b); start=null; dragging=false; clearSel(); if(!p){ api.sfx('bad'); return; }
+      var s=p.map(function(x){ return x.textContent; }).join(''), rs=s.split('').reverse().join('');
+      var hit=G.placed.find(function(w){ return !w.found&&(w.w===s||w.w===rs); });
+      if(hit){ hit.found=true; var col=MATCH_COLORS[found%MATCH_COLORS.length]; found++; p.forEach(function(x){ x.classList.add('found'); x.style.setProperty('--fc',col); }); hit.li.classList.add('found'); api.sfx('ok');
+        if(found===G.placed.length) setTimeout(function(){ api.finish(Math.max(0,G.placed.length-Math.floor(wrong/2)),G.placed.length,{label:'Hodnotenie'}); },800); }
+      else { wrong++; api.sfx('bad'); p.forEach(function(x){ x.classList.add('flash'); }); setTimeout(function(){ p.forEach(function(x){ x.classList.remove('flash'); }); },450); } }
+    grid.addEventListener('pointerdown',function(e){ var c=e.target.closest('.ws-cell'); if(!c) return; e.preventDefault(); if(start&&c!==start){ attempt(start,c); return; } start=c; dragging=true; preview(c); });
+    grid.addEventListener('pointermove',function(e){ if(!dragging||!start) return; var c=cellAt(e); if(c) preview(c); });
+    grid.addEventListener('pointerup',function(e){ if(!dragging) return; dragging=false; var c=cellAt(e); if(c&&start&&c!==start) attempt(start,c); });
+    body.append(h('div',{class:'ws-wrap'},grid,list)); } };
+
+TYPES.zorad={ name:'Zoraď', icon:'🔢', color:'#C28A00', age:'MŠ · ZŠ', desc:'Usporiadanie krokov, príbehu či čísel do správneho poradia.', instr:'Zoraď obrázky v správnom poradí. Ťukni na dva a vymenia sa.',
+  count:function(d){ return plural(d.items.length,'krok','kroky','krokov'); },
+  sample:function(){ return {title:'Ako rastie slnečnica',data:{items:[{t:'semienko v zemi',pic:'🌰'},{t:'klíček',pic:'🌱'},{t:'rastlinka',pic:'🌿'},{t:'kvet slnečnice',pic:'🌻'}]}}; },
+  editor:function(d,el){ el.append(h('p',{class:'hint'},'Zadajte položky v správnom poradí. Deťom sa zobrazia zamiešané.'),
+    listEditor({items:d.items,noun:'Krok',addLabel:'Pridať krok',min:2,max:12,newItem:function(){ return {t:'',pic:''}; },
+      row:function(it){ return h('div',{class:'two'},field('Text',textInput(it,'t',{ph:'Napr. ráno vstanem'})),field('Obrázok',picField(it,'pic'),'nepovinné')); }})); },
+  play:function(d,body,api){ var items=d.items.filter(function(x){ return x.t||x.pic; }).map(function(x,i){ return {t:x.t,pic:x.pic,i:i}; }); if(items.length<2) return empty(body,'Pridajte aspoň 2 položky.');
+    var order=shuffle(items.slice()), g=0; while(order.every(function(x,k){ return x.i===k; })&&g++<30) shuffle(order);
+    var list=h('ol',{class:'sort-list'}), sel=null, marks=null, wrongSet={}, status=h('p',{class:'p-status',role:'status'});
+    function render(){ list.replaceChildren.apply(list,order.map(function(it,k){ var cls='sort-item'+(sel===k?' sel':'')+(marks?(marks[k]?' ok':' bad'):'');
+      return h('li',{class:cls},h('span',{class:'sort-n'},k+1),h('button',{type:'button',class:'sort-main',onclick:function(){ tap(k); }},it.pic?content(it.pic,'sort-pic'):null,it.t?h('span',null,it.t):null),
+        h('span',{class:'sort-arrows'},iconBtn('▲','Posunúť vyššie',function(){ move(k,-1); },k===0),iconBtn('▼','Posunúť nižšie',function(){ move(k,1); },k===order.length-1))); })); }
+    function tap(k){ marks=null; if(sel===null) sel=k; else if(sel===k) sel=null; else { var t=order[sel]; order[sel]=order[k]; order[k]=t; sel=null; Sound.play('tick'); } render(); }
+    function move(k,dir){ marks=null; var j=k+dir, t=order[k]; order[k]=order[j]; order[j]=t; sel=null; Sound.play('tick'); render(); }
+    function check(){ sel=null; marks=order.map(function(it,k){ return it.i===k; }); render(); var all=marks.every(Boolean);
+      marks.forEach(function(m,k){ if(!m) wrongSet[order[k].i]=1; });
+      if(all){ api.sfx('ok'); status.className='p-status good'; status.textContent='Poradie je správne! 🎉'; setTimeout(function(){ api.finish(items.length-Object.keys(wrongSet).length,items.length,{label:'Na správnom mieste na prvý pokus'}); },1000); }
+      else { api.sfx('bad'); status.className='p-status badtxt'; status.textContent='Červené ešte nie sú na svojom mieste.'; } }
+    render(); body.append(list,h('div',{class:'p-actions'},h('button',{type:'button',class:'btn primary big',onclick:check},'✔ Skontrolovať')),status); } };
+
+function groupItems(g){ return String(g.items||'').split('\n').map(function(s){return s.trim();}).filter(Boolean); }
+TYPES.triedenie={ name:'Roztrieď', icon:'🧺', color:'#5B6CF0', age:'MŠ · ZŠ', desc:'Triedenie obrázkov či slov do skupín, napr. ovocie a zelenina.', instr:'Ťukni na obrázok a potom na košík, kam patrí.',
+  count:function(d){ return plural(d.groups.length,'skupina','skupiny','skupín'); },
+  sample:function(){ return {title:'Ovocie alebo zelenina?',data:{groups:[{name:'Ovocie',pic:'🧺',items:'🍎\n🍌\n🍓\n🍐\n🍇'},{name:'Zelenina',pic:'🥗',items:'🥕\n🥦\n🥒\n🌽\n🧅'}]}}; },
+  editor:function(d,el){ el.append(listEditor({items:d.groups,noun:'Skupina',addLabel:'Pridať skupinu',min:2,max:6,newItem:function(){ return {name:'',pic:'',items:''}; },
+    row:function(g){ return [h('div',{class:'two'},field('Názov skupiny',textInput(g,'name',{ph:'Napr. Zvieratá v lese'})),field('Obrázok skupiny',picField(g,'pic'),'nepovinné')),
+      field('Čo patrí do skupiny',textInput(g,'items',{area:true,rows:4,ph:'Každú položku na nový riadok – slovo alebo emoji'}),'každá položka na nový riadok')]; }})); },
+  play:function(d,body,api){ var groups=d.groups.filter(function(g){ return g.name||g.pic; }).map(function(g,gi){ return {name:g.name,pic:g.pic,gi:gi,list:groupItems(g)}; });
+    var pool=[]; groups.forEach(function(g){ g.list.forEach(function(v){ pool.push({v:v,gi:g.gi}); }); }); if(groups.length<2||!pool.length) return empty(body,'Pridajte aspoň 2 skupiny a položky do nich.');
+    shuffle(pool); var sel=null, left=pool.length, wrong=0; var poolEl=h('div',{class:'pool'});
+    pool.forEach(function(it){ var c=h('button',{type:'button',class:'chip-item',draggable:'true'},content(it.v)); c._it=it;
+      c.onclick=function(){ if(sel) sel.classList.remove('sel'); sel=(sel===c)?null:c; if(sel){ sel.classList.add('sel'); Sound.play('tick'); } };
+      c.addEventListener('dragstart',function(e){ if(sel) sel.classList.remove('sel'); sel=c; c.classList.add('sel'); try{ e.dataTransfer.setData('text/plain','x'); }catch(x){} });
+      poolEl.append(c); });
+    var buckets=h('div',{class:'buckets'},groups.map(function(g){ var inner=h('div',{class:'bucket-items'});
+      var b=h('div',{class:'bucket',role:'button',tabindex:'0','aria-label':'Košík '+(g.name||'')},h('div',{class:'bucket-head'},g.pic?content(g.pic,'bucket-pic'):null,h('span',null,g.name)),inner);
+      function drop(){ if(!sel){ shake(b); return; } var it=sel._it;
+        if(it.gi===g.gi){ var c=sel; c.classList.remove('sel'); c.disabled=true; c.draggable=false; inner.append(c); sel=null; left--; api.sfx('ok');
+          if(!left){ poolEl.hidden=true; setTimeout(function(){ api.finish(Math.max(0,pool.length-wrong),pool.length,{label:'Hodnotenie'}); },800); } }
+        else { wrong++; api.sfx('bad'); shake(sel); shake(b); } }
+      b.onclick=function(e){ if(e.target.closest('.chip-item')&&e.target.closest('.chip-item').disabled) return; drop(); };
+      b.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); drop(); } };
+      b.addEventListener('dragover',function(e){ e.preventDefault(); }); b.addEventListener('drop',function(e){ e.preventDefault(); drop(); }); return b; }));
+    body.append(poolEl,buckets); } };
+
+TYPES.presmycky={ name:'Prešmyčky', icon:'🔀', color:'#E04848', age:'MŠ · ZŠ', desc:'Poprehadzované písmená, z ktorých deti poskladajú slovo.', instr:'Poskladaj slovo z písmen. Ťukaj na písmená v správnom poradí.',
+  count:function(d){ return plural(d.words.length,'slovo','slová','slov'); },
+  sample:function(){ return {title:'Zvieratká',data:{words:[{w:'PES',hint:'Breše a stráži dom.',pic:'🐶'},{w:'MAČKA',hint:'Mňauká a chytá myši.',pic:'🐱'},{w:'KRAVA',hint:'Dáva nám mlieko.',pic:'🐮'},{w:'SOVA',hint:'V noci húka v lese.',pic:'🦉'}]}}; },
+  editor:function(d,el){ el.append(listEditor({items:d.words,noun:'Slovo',addLabel:'Pridať slovo',newItem:function(){ return {w:'',hint:'',pic:''}; },
+    row:function(it){ return [h('div',{class:'two'},field('Slovo',textInput(it,'w',{ph:'Napr. SLON',upper:true})),field('Obrázok',picField(it,'pic'),'nápoveda')),field('Nápoveda',textInput(it,'hint',{ph:'Napr. Má dlhý chobot.'}),'nepovinné')]; }})); },
+  play:function(d,body,api){ var words=d.words.filter(function(x){ return cleanWord(x.w).length>=2; }); if(!words.length) return empty(body,'Pridajte aspoň jedno slovo.'); var i=0,score=0;
+    function show(){ var it=words[i], target=Array.from(cleanWord(it.w)); var letters=shuffle(target.slice()), g=0; while(letters.join('')===target.join('')&&g++<30) shuffle(letters);
+      var tried=false, lock=false, filled=target.map(function(){ return null; }); var slotsEl=h('div',{class:'an-slots'}), tilesEl=h('div',{class:'an-tiles'});
+      var slots=target.map(function(_,k){ var s=h('button',{type:'button',class:'an-slot','aria-label':'Políčko '+(k+1)}); s.onclick=function(){ if(lock||!filled[k]) return; filled[k].tile.hidden=false; filled[k]=null; s.textContent=''; }; return s; });
+      function reset(){ filled.forEach(function(f,k){ if(f){ f.tile.hidden=false; filled[k]=null; slots[k].textContent=''; } }); }
+      function check(){ var s=filled.map(function(f){ return f.ch; }).join('');
+        if(s===target.join('')){ lock=true; slotsEl.classList.add('ok'); api.sfx('ok'); if(!tried) score++; setTimeout(next,1100); }
+        else { tried=true; lock=true; slotsEl.classList.add('bad'); api.sfx('bad'); setTimeout(function(){ slotsEl.classList.remove('bad'); reset(); lock=false; },900); } }
+      letters.forEach(function(ch){ var t=h('button',{type:'button',class:'an-tile'},ch); t.onclick=function(){ if(lock) return; var k=filled.indexOf(null); if(k<0) return;
+        filled[k]={tile:t,ch:ch}; t.hidden=true; slots[k].textContent=ch; Sound.play('tick'); if(filled.indexOf(null)<0) check(); }; tilesEl.append(t); });
+      slotsEl.append.apply(slotsEl,slots);
+      body.replaceChildren(progress(i,words.length),h('div',{class:'q-card'},it.pic?content(it.pic,'q-pic'):null,it.hint?h('div',{class:'q-line'},h('p',{class:'q-text'},it.hint),speakBtn(it.hint)):null),slotsEl,tilesEl,
+        h('div',{class:'p-actions'},h('button',{type:'button',class:'btn ghost',onclick:function(){ if(!lock) reset(); }},'↺ Začať slovo odznova'))); }
+    function next(){ i++; if(i<words.length) show(); else api.finish(score,words.length); }
+    show(); },
+  print:function(d,el){ d.words.filter(function(x){ return cleanWord(x.w).length>=2; }).forEach(function(it,i){ var t=Array.from(cleanWord(it.w)), l=shuffle(t.slice());
+    el.append(h('div',{class:'pr-q'},h('div',{class:'pr-q-head'},(i+1)+'.',it.pic?content(it.pic):null,h('span',null,it.hint||'')),h('div',{class:'pr-letters'},l.join(' ')),h('div',{class:'pr-line'},t.map(function(){ return h('i'); })))); }); } };
+
+TYPES.pravda={ name:'Pravda či nepravda', icon:'👍', color:'#1A8FD8', age:'MŠ · ZŠ', desc:'Tvrdenia, pri ktorých deti rozhodnú, či platia. Dá sa čítať nahlas.', instr:'Je to pravda? Ťukni na 👍 alebo 👎.',
+  count:function(d){ return plural(d.items.length,'tvrdenie','tvrdenia','tvrdení'); },
+  sample:function(){ return {title:'Pravda alebo nie?',data:{items:[{t:'Slon je väčší ako myš.',pic:'🐘',ok:true},{t:'Ryby žijú na stromoch.',pic:'🐟',ok:false},{t:'V zime padá sneh.',pic:'❄️',ok:true},{t:'Mačka má šesť nôh.',pic:'🐱',ok:false}]}}; },
+  editor:function(d,el){ el.append(listEditor({items:d.items,noun:'Tvrdenie',addLabel:'Pridať tvrdenie',newItem:function(){ return {t:'',pic:'',ok:true}; },
+    row:function(it){ var seg=h('div',{class:'seg',role:'group','aria-label':'Platí tvrdenie?'}); function draw(){ seg.replaceChildren(
+        h('button',{type:'button',class:it.ok?'on':'', 'aria-pressed':String(!!it.ok),onclick:function(){ it.ok=true; draw(); onChange(); }},'👍 Pravda'),
+        h('button',{type:'button',class:!it.ok?'on':'', 'aria-pressed':String(!it.ok),onclick:function(){ it.ok=false; draw(); onChange(); }},'👎 Nepravda')); } draw();
+      return [field('Tvrdenie',textInput(it,'t',{ph:'Napr. Slnko svieti v noci.'})),field('Obrázok',picField(it,'pic'),'nepovinné'),field('Správna odpoveď',seg)]; }})); },
+  play:function(d,body,api){ var items=d.items.filter(function(x){ return x.t||x.pic; }); if(!items.length) return empty(body); var i=0,score=0;
+    function show(){ var it=items[i], locked=false;
+      function pick(val,btn,other){ if(locked) return; locked=true; if(val===!!it.ok){ btn.classList.add('ok'); api.sfx('ok'); score++; setTimeout(next,950); }
+        else { btn.classList.add('bad'); other.classList.add('reveal'); api.sfx('bad'); setTimeout(next,1700); } }
+      var yes=h('button',{type:'button',class:'ans'},'👍 Pravda'), no=h('button',{type:'button',class:'ans'},'👎 Nepravda');
+      yes.onclick=function(){ pick(true,yes,no); }; no.onclick=function(){ pick(false,no,yes); };
+      body.replaceChildren(progress(i,items.length),h('div',{class:'q-card'},it.pic?content(it.pic,'q-pic'):null,h('div',{class:'q-line'},h('p',{class:'q-text'},it.t),speakBtn(it.t))),h('div',{class:'tf-row'},yes,no)); }
+    function next(){ i++; if(i<items.length) show(); else api.finish(score,items.length,{label:'Správne odpovede'}); }
+    show(); },
+  print:function(d,el){ d.items.filter(function(x){ return x.t||x.pic; }).forEach(function(it,i){ el.append(h('div',{class:'pr-q'},h('div',{class:'pr-q-head'},(i+1)+'.',it.pic?content(it.pic):null,h('span',null,it.t)),
+    h('div',{class:'pr-opts'},h('span',null,h('i',{class:'pr-box'}),'PRAVDA'),h('span',null,h('i',{class:'pr-box'}),'NEPRAVDA')))); }); } };
+
+var TYPE_ORDER=['quiz','tajnicka','pexeso','sparuj','doplnovacka','osemsmerovka','zorad','triedenie','presmycky','pravda'];
+
+/* ---------- player shell ---------- */
+var END_MSG={3:'Výborne! 🎉',2:'Šikovné! 👏',1:'Dobrý pokus! Skús to ešte raz 💪'};
+function renderPlayer(act,host,opts){ opts=opts||{}; var T=TYPES[act.type]; var body=h('div',{class:'p-body'});
+  var head=h('div',{class:'p-head'},h('div',{class:'p-badge','aria-hidden':'true'},T.icon),h('div',{class:'p-titles'},h('h2',{class:'p-title'},act.title||T.name),act.instructions?h('p',{class:'p-instr'},act.instructions):null),speakBtn(act.instructions));
+  var root=h('div',{class:'player'+(opts.big?' big':''),style:{'--tc':T.color}},head,body); host.replaceChildren(root);
+  var api={ sfx:function(k){ Sound.play(k); },
+    finish:function(score,total,o){ o=o||{}; var pct=total?score/total:1; var stars=pct>=.9?3:pct>=.6?2:1; Sound.play('win'); if(stars>=2&&!opts.quiet) confetti();
+      var st=[]; for(var k=0;k<3;k++) st.push(h('span',{class:'star'+(k<stars?' on':'')},'★'));
+      body.replaceChildren(h('div',{class:'p-end'},h('div',{class:'stars',role:'img','aria-label':stars+' z 3 hviezdičiek'},st),h('h3',null,END_MSG[stars]),
+        o.label===false?null:h('p',{class:'p-score'},(o.label||'Správne na prvý pokus')+': '+score+' z '+total),o.extra?h('p',{class:'muted'},o.extra):null,
+        h('button',{type:'button',class:'btn primary big',onclick:function(){ renderPlayer(act,host,opts); }},'↻ Hrať znova'))); } };
+  try{ T.play(act.data,body,api); }catch(e){ console.error(e); empty(body,'Úlohu sa nepodarilo zobraziť. Skontrolujte jej obsah.'); }
+}
+
+/* ---------- app views ---------- */
+function newActivity(type){ var T=TYPES[type], s=T.sample(); return {id:uid(),type:type,title:s.title,instructions:T.instr,data:s.data,updated:Date.now(),sample:true}; }
+var soundBtns=[];
+function soundToggle(){ var b=h('button',{type:'button',class:'btn ghost'}); function draw(){ b.textContent=Sound.muted?'🔇 Zvuk vypnutý':'🔊 Zvuk'; b.setAttribute('aria-pressed',String(!Sound.muted)); }
+  b.onclick=function(){ Sound.muted=!Sound.muted; lsSet(LS_MUTE,Sound.muted?'1':'0'); soundBtns.forEach(function(f){ f(); }); if(!Sound.muted) Sound.play('ok'); };
+  draw(); soundBtns.push(draw); return b; }
+var canPrint=(function(){ try{ return window.self===window.top&&typeof window.print==='function'; }catch(e){ return false; } })();
+
+/* ---------- GitHub: automatické ukladanie úloh do repozitára ---------- */
+var ghAvailable=canPrint&&typeof fetch==='function';
+var GH_KEY='hravadielna.gh', GH={cfg:null,state:'off',err:'',queue:Promise.resolve(),timers:{},btns:[],editing:null};
+try{ GH.cfg=JSON.parse(lsGet(GH_KEY)||'null'); }catch(e){ GH.cfg=null; }
+function ghOn(){ return ghAvailable&&!!(GH.cfg&&GH.cfg.token&&GH.cfg.owner&&GH.cfg.repo); }
+function ghDefaults(){ var d={owner:'Daubner5696',repo:'School',branch:'main',dir:'hrava-dielna',token:''};
+  var m=location.hostname.match(/^([^.]+)\.github\.io$/i);
+  if(m){ d.owner=m[1]; var parts=location.pathname.split('/').filter(Boolean).filter(function(p){ return !/\.html?$/i.test(p); });
+    if(parts.length){ d.repo=decodeURIComponent(parts[0]); d.dir=parts.slice(1).map(decodeURIComponent).join('/'); } }
+  return d; }
+function ghDir(){ var d=String(GH.cfg.dir||'').replace(/^\/+|\/+$/g,''); return (d?d+'/':'')+'ulohy'; }
+function encPath(p){ return p.split('/').map(encodeURIComponent).join('/'); }
+function b64(str){ var bytes=new TextEncoder().encode(str), s=''; for(var i=0;i<bytes.length;i+=0x8000) s+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000)); return btoa(s); }
+function ghApi(method,path,body,raw){ var c=GH.cfg; var hd={'Authorization':'Bearer '+c.token,'Accept':raw?'application/vnd.github.raw+json':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+  if(body) hd['Content-Type']='application/json';
+  return fetch('https://api.github.com/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)+path,{method:method,headers:hd,body:body?JSON.stringify(body):undefined,cache:'no-store'})
+    .then(function(r){ return r.text().then(function(t){ if(!r.ok){ var j=null; try{ j=JSON.parse(t); }catch(e){} var err=new Error((j&&j.message)||('HTTP '+r.status)); err.status=r.status; throw err; }
+      if(raw) return t; return t?JSON.parse(t):null; }); }); }
+function ghErrText(e){ if(!e) return ''; if(e.status===401) return 'Token neplatí alebo vypršal. Vytvorte nový.';
+  if(e.status===403) return 'Token nemá právo zapisovať do repozitára (treba Contents: Read and write).';
+  if(e.status===404) return 'Repozitár sa nenašiel, alebo k nemu token nemá prístup.';
+  if(/fetch|network/i.test(e.message||'')) return 'Nepodarilo sa spojiť s GitHubom. Skontrolujte internet.'; return e.message||'Neznáma chyba.'; }
+function setGh(state,err){ GH.state=state; GH.err=err?ghErrText(err):''; GH.btns.forEach(function(f){ f(); }); if(state==='err'&&err) toast('GitHub: '+GH.err); }
+function ghButton(){ if(!ghAvailable) return null; var b=h('button',{type:'button',class:'btn ghost',onclick:ghDialog});
+  function draw(){ b.textContent=!ghOn()?'☁ Pripojiť GitHub':GH.state==='busy'?'☁ Ukladám na GitHub…':GH.state==='err'?'☁ GitHub ⚠':'☁ GitHub ✓';
+    b.title=GH.err||(ghOn()?'Úlohy sa ukladajú do '+GH.cfg.owner+'/'+GH.cfg.repo:'Ukladať úlohy do repozitára na GitHube'); }
+  draw(); GH.btns.push(draw); return b; }
+function ghEnqueue(fn){ GH.queue=GH.queue.catch(function(){}).then(fn); return GH.queue; }
+function ghSave(a){ if(!ghOn()||a.seed) return Promise.resolve(); a.ghDirty=true; persist(); setGh('busy');
+  return ghEnqueue(function(){ if(library.indexOf(a)<0) return; var path='/contents/'+encPath(ghDir()+'/'+a.id+'.json');
+      var body={message:'Hravá dielňa: '+(a.title||'úloha'),content:b64(JSON.stringify(cleanCopy(a),null,1)),branch:GH.cfg.branch||'main'}; if(a.ghSha) body.sha=a.ghSha;
+      return ghApi('PUT',path,body).catch(function(e){ if(e.status!==409&&e.status!==422) throw e;
+          return ghApi('GET',path+'?ref='+encodeURIComponent(body.branch)).then(function(j){ body.sha=j.sha; },function(e2){ if(e2.status===404){ delete body.sha; return; } throw e2; })
+            .then(function(){ return ghApi('PUT',path,body); }); })
+        .then(function(j){ a.ghSha=j&&j.content&&j.content.sha; a.ghDirty=false; persist(); if(!Object.keys(GH.timers).length) setGh('ok'); }); })
+    .catch(function(e){ setGh('err',e); }); }
+function ghSchedule(a){ if(!ghOn()||a.seed) return; clearTimeout(GH.timers[a.id]); setGh('busy'); GH.timers[a.id]=setTimeout(function(){ delete GH.timers[a.id]; ghSave(a); },2500); }
+function ghFlush(){ Object.keys(GH.timers).forEach(function(id){ clearTimeout(GH.timers[id]); delete GH.timers[id]; var a=library.find(function(x){ return x.id===id; }); if(a) ghSave(a); }); }
+function ghDelete(a){ if(!ghOn()) return; clearTimeout(GH.timers[a.id]); delete GH.timers[a.id]; if(!a.ghSha&&!a.ghDirty) return; setGh('busy');
+  ghEnqueue(function(){ if(!a.ghSha) return; return ghApi('DELETE','/contents/'+encPath(ghDir()+'/'+a.id+'.json'),{message:'Hravá dielňa: vymazaná úloha '+(a.title||''),sha:a.ghSha,branch:GH.cfg.branch||'main'}); })
+    .then(function(){ setGh('ok'); },function(e){ if(e.status===404) setGh('ok'); else setGh('err',e); }); }
+function ghSync(quiet){ if(!ghOn()) return Promise.resolve(0); setGh('busy'); var br=GH.cfg.branch||'main';
+  return ghEnqueue(function(){ return ghApi('GET','/contents/'+encPath(ghDir())+'?ref='+encodeURIComponent(br)).catch(function(e){ if(e.status===404) return []; throw e; })
+      .then(function(list){ list=Array.isArray(list)?list.filter(function(f){ return f.type==='file'&&/^[a-z0-9]+\.json$/i.test(f.name); }):[]; var seen={}, changed=0;
+        var jobs=list.map(function(f){ var id=f.name.replace(/\.json$/i,''); seen[id]=1; var loc=library.find(function(x){ return x.id===id; });
+          if(loc&&(loc.ghSha===f.sha||loc.ghDirty||GH.editing===id)) return null;
+          return ghApi('GET','/contents/'+encPath(f.path)+'?ref='+encodeURIComponent(br),null,true).then(function(t){ var a=JSON.parse(t); if(!a||!TYPES[a.type]||!a.data) return;
+            a.id=id; a.ghSha=f.sha; delete a.seed; delete a.ghDirty; var i=library.findIndex(function(x){ return x.id===id; }); if(i>=0) library[i]=a; else library.push(a); changed++; }).catch(function(){}); });
+        var before=library.length; library=library.filter(function(a){ return !(a.ghSha&&!a.ghDirty&&!seen[a.id]&&GH.editing!==a.id); }); changed+=before-library.length;
+        return Promise.all(jobs).then(function(){ persist(); return changed; }); }); })
+    .then(function(changed){ setGh('ok'); library.filter(function(a){ return a.ghDirty&&!a.seed; }).forEach(ghSave);
+      if(changed&&!GH.editing) showHome(); if(!quiet) toast(changed?'GitHub: načítané zmeny ('+changed+').':'GitHub: všetko je aktuálne.'); return changed; },
+      function(e){ setGh('err',e); return 0; }); }
+function kidsLink(a){ if(!a.ghSha) return null; var base;
+  if(/\.github\.io$/i.test(location.hostname)) base=location.origin+location.pathname.replace(/[^\/]*$/,'');
+  else { var c=GH.cfg||ghDefaults(); var d=String(c.dir||'').replace(/^\/+|\/+$/g,''); base='https://'+c.owner.toLowerCase()+'.github.io/'+c.repo+'/'+(d?d+'/':''); }
+  return base+'#hraj-'+a.id; }
+function modal(title,children){ var back=h('div',{class:'modal-back'}); function close(){ back.remove(); document.removeEventListener('keydown',esc); } function esc(e){ if(e.key==='Escape') close(); }
+  back.onclick=function(e){ if(e.target===back) close(); }; document.addEventListener('keydown',esc);
+  back.append(h('div',{class:'modal',role:'dialog','aria-modal':'true','aria-label':title},h('h2',null,title),children(close))); document.body.append(back); return close; }
+function copyLink(url){ function box(){ modal('Odkaz pre deti',function(close){ var inp=h('input',{class:'inp',type:'text',readonly:true,value:url,'aria-label':'Odkaz'}); setTimeout(function(){ inp.focus(); inp.select(); },30);
+    return [h('p',{class:'hint'},'Skopírujte odkaz a pošlite ho deťom alebo rodičom. Nová úloha začne fungovať asi o minútu po uložení.'),inp,h('div',{class:'row-tools'},h('button',{type:'button',class:'btn',onclick:close},'Zavrieť'))]; }); }
+  try{ navigator.clipboard.writeText(url).then(function(){ toast('Odkaz pre deti je skopírovaný. Nová úloha začne fungovať asi o minútu.'); },box); }catch(e){ box(); } }
+function ghDialog(){ var c=Object.assign(ghDefaults(),GH.cfg||{}); var on=ghOn();
+  modal('Ukladanie úloh na GitHub',function(close){ var msg=h('p',{class:'gh-msg',role:'status'});
+    var tok=h('input',{class:'inp',type:'password',autocomplete:'off',placeholder:on?'•••••••• (token je uložený)':'github_pat_…','aria-label':'Token'});
+    var own=h('input',{class:'inp',type:'text',value:c.owner,'aria-label':'Používateľ'}), rep=h('input',{class:'inp',type:'text',value:c.repo,'aria-label':'Repozitár'});
+    var br=h('input',{class:'inp',type:'text',value:c.branch||'main','aria-label':'Vetva'}), dir=h('input',{class:'inp',type:'text',value:c.dir||'','aria-label':'Priečinok aplikácie'});
+    function say(cls,t){ msg.className='gh-msg '+cls; msg.textContent=t; }
+    var connect=h('button',{type:'button',class:'btn primary',onclick:function(){
+      var cfg={owner:own.value.trim(),repo:rep.value.trim(),branch:br.value.trim()||'main',dir:dir.value.trim().replace(/^\/+|\/+$/g,''),token:tok.value.trim()||(GH.cfg&&GH.cfg.token)||''};
+      if(!cfg.token) return say('bad','Vložte token z GitHubu (postup je vyššie).'); if(!cfg.owner||!cfg.repo) return say('bad','Vyplňte používateľa a repozitár.');
+      connect.disabled=true; say('','Overujem prístup…'); var prev=GH.cfg; GH.cfg=cfg;
+      ghApi('GET','').then(function(j){ if(!j||!j.permissions||!j.permissions.push){ var e=new Error('push'); e.status=403; throw e; }
+          lsSet(GH_KEY,JSON.stringify(cfg)); say('good','Pripojené. Načítavam a ukladám úlohy…');
+          return ghSync(true).then(function(){ library.filter(function(a){ return !a.ghSha&&!a.seed&&!a.sample; }).forEach(ghSave); close(); toast('GitHub je pripojený. Úlohy sa budú ukladať automaticky.'); if(!GH.editing) showHome(); }); })
+        .catch(function(e){ GH.cfg=prev; say('bad',ghErrText(e)); setGh(ghOn()?GH.state:'off'); }).then(function(){ connect.disabled=false; }); }},on?'Uložiť a otestovať':'Pripojiť a otestovať');
+    var link=h('a',{href:'https://github.com/settings/personal-access-tokens/new',target:'_blank',rel:'noopener'},'vytvorenie nového tokenu');
+    return [h('p',{class:'hint'},'Každá upravená úloha sa sama uloží do repozitára ako súbor. Ak je na repozitári zapnuté GitHub Pages, dostane aj odkaz, ktorý môžete poslať deťom (v ponuke „⋯“ pri úlohe).'),
+      on?h('p',{class:'note'},'Pripojené k '+GH.cfg.owner+'/'+GH.cfg.repo+', úlohy sú v priečinku '+ghDir()+'.'):null,
+      h('details',{class:'gh-help',open:!on},h('summary',null,'Ako získať token (jednorazovo, asi 2 minúty)'),h('ol',{class:'steps-mini'},
+        h('li',null,'Na GitHube otvorte ',link,' (musíte byť prihlásení).'),h('li',null,'Token name: Hravá dielňa. Expiration: napríklad 1 rok.'),
+        h('li',null,'Repository access: Only select repositories → vyberte ',h('strong',null,c.repo),'.'),h('li',null,'Permissions → Repository permissions → Contents: ',h('strong',null,'Read and write'),'.'),
+        h('li',null,'Kliknite na Generate token, token skopírujte a vložte sem.'))),
+      field('Token',tok,'uloží sa iba v tomto prehliadači'),h('div',{class:'two'},field('Používateľ',own),field('Repozitár',rep)),h('div',{class:'two'},field('Vetva',br),field('Priečinok aplikácie',dir)),msg,
+      h('div',{class:'row-tools'},connect,on?h('button',{type:'button',class:'btn',onclick:function(){ close(); ghSync(false); }},'⟳ Synchronizovať teraz'):null,
+        on?h('button',{type:'button',class:'btn danger',onclick:function(){ var k=Object.assign({},GH.cfg); k.token=''; lsSet(GH_KEY,JSON.stringify(k)); GH.cfg=k; setGh('off'); close(); toast('GitHub je odpojený. Úlohy zostávajú v tomto prehliadači.'); }},'Odpojiť'):null,
+        h('button',{type:'button',class:'btn ghost',onclick:close},'Zavrieť')),
+      h('p',{class:'hint'},'Nepripájajte GitHub na spoločnom počítači, napríklad v zborovni: token by mohol použiť ktokoľvek, kto pracuje v tomto prehliadači. Ak je repozitár verejný, úlohy v ňom uvidí každý.')]; }); }
+function hashRoute(){ var m=location.hash.match(/^#hraj-([a-z0-9]+)$/i); if(!m||!/^https?:$/.test(location.protocol)) return false;
+  $app.replaceChildren(h('p',{class:'p-empty'},'Načítavam úlohu…'));
+  fetch('ulohy/'+m[1]+'.json',{cache:'no-store'}).then(function(r){ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
+    .then(function(a){ kidsMode(a); },function(){ $app.replaceChildren(h('div',{class:'kids'},h('p',{class:'p-empty'},'Úlohu sa nepodarilo načítať. Ak bola práve uložená, počkajte minútu a obnovte stránku.'))); });
+  return true; }
+function brand(){ var svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('width','40'); svg.setAttribute('height','40'); svg.setAttribute('viewBox','0 0 40 40'); svg.setAttribute('aria-hidden','true');
+  [['#2D6BE4',2,2],['#E2673A',21,2],['#F2B705',2,21],['#3E9B3A',21,21]].forEach(function(q){ var r=document.createElementNS('http://www.w3.org/2000/svg','rect'); r.setAttribute('x',q[1]); r.setAttribute('y',q[2]); r.setAttribute('width','17'); r.setAttribute('height','17'); r.setAttribute('rx','5'); r.setAttribute('fill',q[0]); svg.append(r); });
+  var t=document.createElementNS('http://www.w3.org/2000/svg','text'); t.setAttribute('x','10.5'); t.setAttribute('y','15.5'); t.setAttribute('font-size','12'); t.setAttribute('font-weight','800'); t.setAttribute('fill','#fff'); t.setAttribute('text-anchor','middle'); t.setAttribute('font-family','Arial,sans-serif'); t.textContent='A'; svg.append(t);
+  return h('button',{type:'button',class:'brand',onclick:showHome,'aria-label':'Hravá dielňa – domov'},svg,h('span',null,h('span',{class:'brand-name'},'Hravá dielňa'),h('span',{class:'brand-sub'},'tvorba hravých úloh pre MŠ a ZŠ'))); }
+var fileInput=null;
+function openFiles(){ if(!fileInput){ fileInput=h('input',{type:'file',accept:'.json,.html,.htm,application/json,text/html',multiple:true,hidden:true}); document.body.append(fileInput);
+    fileInput.onchange=function(){ var files=[].slice.call(fileInput.files); fileInput.value=''; var added=0, bad=0;
+      Promise.all(files.map(function(f){ return f.text().then(function(t){ var list=parseImported(t); if(!list.length) bad++;
+        list.forEach(function(a){ var c=JSON.parse(JSON.stringify(a)); c.id=uid(); c.updated=Date.now(); c.sample=false; delete c.seed; delete c.ghSha; delete c.ghDirty; library.push(c); added++; ghSave(c); }); },function(){ bad++; }).catch(function(){ bad++; }); }))
+      .then(function(){ persist(); showHome(); toast(added?('Načítané úlohy: '+added+(bad?' · niektoré súbory sa nedali prečítať':'')):'V súbore sa nenašla žiadna úloha z Hravej dielne.'); }); }; }
+  fileInput.click(); }
+function topbar(){ return h('header',{class:'topbar'},brand(),h('div',{class:'bar-actions'},
+  h('button',{type:'button',class:'btn ghost',onclick:openFiles,title:'Načítať úlohy zo súboru .json alebo .html'},'📂 Otvoriť súbor'),
+  h('button',{type:'button',class:'btn ghost',onclick:function(){ exportJson(library,'hrava-dielna-zaloha.json'); },title:'Uložiť všetky úlohy do jedného súboru'},'💾 Zálohovať všetko'),
+  h('button',{type:'button',class:'btn ghost',onclick:exportApp,title:'Stiahnuť celú aplikáciu ako jeden súbor – funguje aj bez internetu'},'⬇ Stiahnuť aplikáciu'),
+  ghButton(),soundToggle())); }
+function duplicate(a){ var c=JSON.parse(JSON.stringify(a)); c.id=uid(); c.title=(a.title||'Úloha')+' (kópia)'; c.updated=Date.now(); c.sample=false; delete c.seed; delete c.ghSha; delete c.ghDirty; library.push(c); persist(); ghSave(c); return c; }
+function printAct(a){ var T=TYPES[a.type]; var body=h('div',{class:'pr-body'}); if(T.print) T.print(a.data,body); else T.play(a.data,body,{sfx:function(){},finish:function(){}});
+  var area=h('div',{class:'print-area',style:{'--tc':T.color}},h('h1',{class:'pr-title'},a.title||T.name),a.instructions?h('p',{class:'pr-instr'},a.instructions):null,h('p',{class:'pr-name'},'Meno: ____________________________     Dátum: ______________'),body);
+  document.body.append(area); document.body.classList.add('printing');
+  function done(){ area.remove(); document.body.classList.remove('printing'); window.removeEventListener('afterprint',done); }
+  window.addEventListener('afterprint',done); setTimeout(function(){ window.print(); },60); }
+function menuFor(a,onDelete){ var det=h('details',{class:'more'}); function item(label,fn,cls){ return h('button',{type:'button',class:cls||'',onclick:function(){ det.open=false; fn(); }},label); }
+  var del=h('button',{type:'button',class:'danger'},'🗑 Vymazať'); var armed=false, tm;
+  del.onclick=function(){ if(!armed){ armed=true; del.textContent='Naozaj vymazať? Ťuknite znova'; tm=setTimeout(function(){ armed=false; del.textContent='🗑 Vymazať'; },3500); return; } clearTimeout(tm); det.open=false; onDelete(); };
+  det.append(h('summary',{class:'btn ghost','aria-label':'Ďalšie možnosti'},'⋯'),h('div',{class:'menu'},
+    item('⬇ Stiahnuť pre deti (.html)',function(){ exportKids(a); }),item('💾 Uložiť ako súbor (.json)',function(){ exportJson([a],slug(a.title)+'.json'); }),
+    (ghAvailable&&a.ghSha)?item('🔗 Kopírovať odkaz pre deti',function(){ copyLink(kidsLink(a)); }):null,
+    canPrint?item('🖨 Vytlačiť pracovný list',function(){ printAct(a); }):null,item('⧉ Duplikovať',function(){ duplicate(a); showHome(); toast('Kópia vytvorená'); }),del));
+  return det; }
+document.addEventListener('click',function(e){ document.querySelectorAll('details.more[open]').forEach(function(d){ if(!d.contains(e.target)) d.open=false; }); });
+
+function showHome(){ onChange=function(){}; closePicker(); soundBtns=[]; GH.btns=[]; GH.editing=null; ghFlush();
+  var sorted=library.slice().sort(function(a,b){ return b.updated-a.updated; });
+  var lib= sorted.length? h('div',{class:'lib-grid'},sorted.map(function(a){ var T=TYPES[a.type];
+      return h('article',{class:'card',style:{'--tc':T.color}},h('div',{class:'card-top'},h('div',{class:'type-ico','aria-hidden':'true'},T.icon),h('div',null,h('span',{class:'type-name'},T.name),a.sample?h('span',{class:'tag'},'ukážka'):null)),
+        h('h3',{class:'card-title'},a.title||'Bez názvu'),h('p',{class:'card-sub'},T.count(a.data)+' · '+fmtDate(a.updated)),
+        h('div',{class:'card-actions'},h('button',{type:'button',class:'btn primary',onclick:function(){ openPlay(a); }},'▶ Hrať'),h('button',{type:'button',class:'btn',onclick:function(){ showEditor(a.id); }},'✎ Upraviť'),
+          menuFor(a,function(){ library=library.filter(function(x){ return x.id!==a.id; }); persist(); ghDelete(a); showHome(); toast('Úloha je vymazaná.'); }))); }))
+    : h('p',{class:'empty-lib'},'Zatiaľ tu nie sú žiadne úlohy. Vyberte typ úlohy vyššie a začnite.');
+  $app.replaceChildren(topbar(),h('main',{class:'wrap home'},
+    h('div',{class:'intro'},h('h1',null,'Čo dnes vytvoríme?'),h('p',{class:'lead'},'Vyberte typ úlohy, vpíšte obsah do pripravených políčok a hneď ju vyskúšajte. Bez programovania, na tabuli, tablete aj počítači.')),
+    h('section',{'aria-labelledby':'types-h'},h('h2',{id:'types-h',class:'sec-h'},'Nová úloha'),h('div',{class:'type-grid'},TYPE_ORDER.map(function(t){ var T=TYPES[t];
+      return h('button',{type:'button',class:'type-tile',style:{'--tc':T.color},onclick:function(){ var a=newActivity(t); library.push(a); persist(); showEditor(a.id); }},
+        h('span',{class:'type-ico','aria-hidden':'true'},T.icon),h('strong',null,T.name),h('span',{class:'desc'},T.desc),h('span',{class:'age'},T.age)); }))),
+    h('section',{'aria-labelledby':'lib-h'},h('div',{class:'sec-row'},h('h2',{id:'lib-h',class:'sec-h'},'Moje úlohy',h('span',{class:'count'},library.length))),lib),
+    h('section',{'aria-labelledby':'how-h'},h('h2',{id:'how-h',class:'sec-h'},'Ako to funguje'),h('ol',{class:'steps'},
+      h('li',null,h('strong',null,'Vyberte typ úlohy'),h('span',null,'Každá nová úloha začína s ukážkovým obsahom, ktorý len prepíšete.')),
+      h('li',null,h('strong',null,'Vyplňte obsah'),h('span',null,'Píšte text, vyberajte emoji alebo nahrajte vlastné obrázky. Náhľad vpravo sa mení hneď.')),
+      h('li',null,h('strong',null,'Hrajte alebo pošlite deťom'),h('span',null,'Spustite úlohu na celej obrazovke, alebo ju stiahnite ako súbor .html – otvorí sa v každom prehliadači aj bez internetu.'))),
+      h('p',{class:'note'},(ghOn()?'Úlohy sa ukladajú v tomto prehliadači a zároveň na GitHub do '+GH.cfg.owner+'/'+GH.cfg.repo+'. Odkaz pre deti nájdete v ponuke „⋯“ pri úlohe.':'Úlohy sa ukladajú v tomto prehliadači na tomto zariadení. Aby ste o ne neprišli, použite „Zálohovať všetko“'+(ghAvailable?' alebo ich ukladajte na GitHub (tlačidlo „Pripojiť GitHub“).':'.'))+(canPrint?' Pracovný list na tlač nájdete v ponuke „⋯“ pri každej úlohe.':' Tlač pracovných listov funguje v stiahnutej aplikácii.')))));
+  window.scrollTo(0,0); }
+
+function showEditor(id){ var a=library.find(function(x){ return x.id===id; }); if(!a) return showHome(); var T=TYPES[a.type]; closePicker(); soundBtns=[]; GH.btns=[]; GH.editing=a.id;
+  var preview=h('div'), tm; var saved=h('span',{class:'saved',role:'status'},'Uložené ✓');
+  function refresh(){ renderPlayer(a,preview,{quiet:true}); }
+  onChange=function(){ a.updated=Date.now(); a.sample=false; delete a.seed; saved.textContent='Ukladám…'; clearTimeout(tm);
+    tm=setTimeout(function(){ var ok=persist(); saved.textContent=ok?'Uložené ✓':'Neuložené – pamäť prehliadača je plná. Uložte si úlohu ako súbor.'; saved.classList.toggle('warn',!ok); refresh(); },350); ghSchedule(a); };
+  var specific=h('div',{class:'ed-block'},h('h2',{class:'ed-h'},'Obsah úlohy')); T.editor(a.data,specific);
+  var form=h('div',{class:'ed-form'},h('div',{class:'ed-block'},field('Názov úlohy',textInput(a,'title',{ph:'Napr. Zvieratká na dvore'})),field('Pokyn pre deti',textInput(a,'instructions',{ph:T.instr}),'zobrazí sa nad úlohou a dá sa prečítať nahlas')),specific);
+  $app.replaceChildren(topbar(),h('main',{class:'wrap editor'},
+    h('div',{class:'ed-head'},h('div',{class:'ed-type',style:{'--tc':T.color}},h('button',{type:'button',class:'btn ghost',onclick:showHome},'← Moje úlohy'),h('span',{class:'type-ico','aria-hidden':'true'},T.icon),h('h1',null,T.name)),
+      h('div',{class:'ed-actions'},h('button',{type:'button',class:'btn primary',onclick:function(){ openPlay(a); }},'▶ Hrať na celej obrazovke'),
+        h('button',{type:'button',class:'btn',onclick:function(){ exportKids(a); }},'⬇ Pre deti (.html)'),h('button',{type:'button',class:'btn',onclick:function(){ exportJson([a],slug(a.title)+'.json'); }},'💾 Súbor (.json)'),
+        canPrint?h('button',{type:'button',class:'btn',onclick:function(){ printAct(a); }},'🖨 Tlačiť'):null)),
+    h('div',{class:'ed-grid'},form,h('aside',{class:'ed-preview','aria-label':'Náhľad'},h('div',{class:'prev-label'},h('span',null,'Náhľad – takto to uvidia deti (dá sa skúšať)'),saved),preview))));
+  refresh(); window.scrollTo(0,0); }
+
+var playOverlay=null;
+function fsButton(target){ if(!document.fullscreenEnabled) return null; return h('button',{type:'button',class:'btn ghost',onclick:function(){
+  if(document.fullscreenElement) document.exitFullscreen().catch(function(){}); else (target()||document.documentElement).requestFullscreen().catch(function(){ toast('Celá obrazovka tu nie je dostupná.'); }); }},'⛶ Celá obrazovka'); }
+function openPlay(a){ closePicker(); var host=h('div');
+  playOverlay=h('div',{class:'play-overlay',role:'dialog','aria-modal':'true','aria-label':a.title||'Úloha'},h('div',{class:'play-bar'},h('span',{class:'play-brand'},'Hravá dielňa'),
+    h('div',{class:'play-tools'},soundToggle(),fsButton(function(){ return playOverlay; }),h('button',{type:'button',class:'btn',onclick:closePlay},'✕ Zavrieť'))),host);
+  document.body.append(playOverlay); document.body.classList.add('no-scroll'); renderPlayer(a,host,{big:true}); }
+function closePlay(){ if(document.fullscreenElement) document.exitFullscreen().catch(function(){}); if(playOverlay) playOverlay.remove(); playOverlay=null; document.body.classList.remove('no-scroll'); try{ speechSynthesis.cancel(); }catch(e){} }
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ if(pickerEl) closePicker(); else if(playOverlay&&!document.fullscreenElement) closePlay(); } });
+
+function kidsMode(a){ if(!TYPES[a.type]){ $app.replaceChildren(h('p',{class:'p-empty'},'Táto úloha sa nedá otvoriť.')); return; } document.title=a.title||'Úloha'; var host=h('div');
+  $app.replaceChildren(h('div',{class:'kids'},h('div',{class:'play-bar'},h('span',{class:'play-brand'},'Hravá dielňa'),h('div',{class:'play-tools'},soundToggle(),fsButton(function(){ return document.documentElement; }))),host));
+  renderPlayer(a,host,{big:true}); }
+
+function initApp(){ var saved=null; try{ saved=JSON.parse(lsGet(LS_KEY)||'null'); }catch(e){ saved=null; }
+  if(Array.isArray(saved)) library=saved.filter(function(a){ return a&&TYPES[a.type]&&a.data; });
+  else { library=TYPE_ORDER.map(function(t,i){ var a=newActivity(t); a.updated=Date.now()-i*60000; a.seed=true; return a; }); persist(); }
+  showHome(); if(ghOn()) ghSync(true); }
+
+if(PRESET&&PRESET.activity) kidsMode(PRESET.activity); else if(!hashRoute()) initApp();
+})();
+</script>
+</body>
+</html>
